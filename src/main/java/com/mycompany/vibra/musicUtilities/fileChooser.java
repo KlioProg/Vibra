@@ -26,5 +26,4 @@ public class fileChooser {
             return List.of(); // empty list if cancelled
         }
     }
-
 }
