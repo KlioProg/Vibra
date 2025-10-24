@@ -142,18 +142,25 @@ public class LoginContentPanel extends JPanel {
 
                     try {
                         AuthService authService = new AuthService();
-                        User user = authService.signup(userText, passwordText);
+                        User user = authService.login(userText, passwordText);
 
                         if (user != null) {
                             JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(LoginContentPanel.this);
                             MainAppFrame mainFrame = new MainAppFrame();
                             mainFrame.setVisible(true);
                             topFrame.dispose();
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                LoginContentPanel.this,
+                                "Invalid username or password.",
+                                "Login Failed",
+                                JOptionPane.ERROR_MESSAGE
+                                );
                         }
                     } catch (Exception ex) {
                         javax.swing.JOptionPane.showMessageDialog(
                                 LoginContentPanel.this,
-                                "Signup failed: " + ex.getMessage(),
+                                "Login failed: " + ex.getMessage(),
                                 "Error",
                                 javax.swing.JOptionPane.ERROR_MESSAGE
                         );
