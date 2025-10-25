@@ -52,7 +52,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         iconFactory = isDark ? new DarkModeIconFactory() : new LightModeIconFactory();
 
         contentPanel.add(new MusicPanel(iconFactory), "MusicPlayer");
-        contentPanel.add(new likedPanel(iconFactory), "Liked");
+        contentPanel.add(new LikedPanel(), "Liked");
 
         sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
