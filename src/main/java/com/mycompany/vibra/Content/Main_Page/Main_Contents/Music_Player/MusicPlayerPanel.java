@@ -10,6 +10,10 @@ import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.Factories.Music_UI.CustomSliderUI;
 import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
+import com.mycompany.vibra.model.Playlist; //playlist import
+import com.mycompany.vibra.model.Observer; //observer import 
+import com.mycompany.vibra.model.TrackIterator; //iterator import 
+
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -17,7 +21,7 @@ import java.awt.*;
 
 import static com.mycompany.vibra.musicUtilities.Mp3Utils.formatMinutes;
 
-public class MusicPlayerPanel extends JPanel {
+public class MusicPlayerPanel extends JPanel implements Observer{
 
     private final AudioPlayer audioPlayer;
     private final IconFactory icons;
@@ -41,6 +45,9 @@ public class MusicPlayerPanel extends JPanel {
     private boolean isPlaying = false;
     private boolean isLiked = false;
 
+    private Playlist currentPlaylist; //new added
+    private TrackIterator playlistIterator;
+    
 
     // we only keep references, icons come from factory
     private ImageIcon playIcon, pauseIcon, heartIcon, likedIcon, defaultCover, themeButton;
@@ -49,6 +56,12 @@ public class MusicPlayerPanel extends JPanel {
         this.audioPlayer = audioPlayer;
         this.icons = new ButtonIconFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
+
+         //for the observer
+        this.currentPlaylist = playlist;
+        this.currentPlaylist.addObserver(this); // Register as an observer
+        this.playlistIterator = currentPlaylist.createIterator();
+        // end for this new added 
 
         setLayout(new BorderLayout(15, 15));
         setBorder(new EmptyBorder(30, 40, 30, 40));
@@ -258,6 +271,20 @@ public class MusicPlayerPanel extends JPanel {
                 isPlaying = false;
             }
         });
+         // listeners for iterator
+        prevButton.addActionListener(e -> {
+            if (playlistIterator.hasPrevious()) {
+                Track prevTrack = playlistIterator.previous();
+                currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(prevTrack));
+            }
+        });
+
+        nextButton.addActionListener(e -> {
+            if (playlistIterator.hasNext()) {
+                Track nextTrack = playlistIterator.next();
+                currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(nextTrack));
+            }
+        });
 
         likeButton.addActionListener(e -> {
             isLiked = !isLiked;
@@ -372,6 +399,13 @@ public class MusicPlayerPanel extends JPanel {
 
     }
 
+    @Override //for update method
+    public void update() {
+        Track currentTrack = currentPlaylist.getCurrentTrack();
+        if (currentTrack != null) {
+            loadTrack(currentTrack);
+        }
+    }
 }
 
 
