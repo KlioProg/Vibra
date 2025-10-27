@@ -31,7 +31,7 @@ public class MusicPanel extends JPanel {
         add(trackListPanel, BorderLayout.WEST);
 
         // Center: Music player panel (share AudioPlayer ✅)
-        musicPlayerPanel = new MusicPlayerPanel(audioPlayer);
+        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist);
         musicPlayerPanel.setPreferredSize(new Dimension(610, 0));
         add(musicPlayerPanel, BorderLayout.CENTER);
 
