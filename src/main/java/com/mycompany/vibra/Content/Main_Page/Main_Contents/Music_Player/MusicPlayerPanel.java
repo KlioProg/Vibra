@@ -52,7 +52,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     // we only keep references, icons come from factory
     private ImageIcon playIcon, pauseIcon, heartIcon, likedIcon, defaultCover, themeButton;
 
-    public MusicPlayerPanel(AudioPlayer audioPlayer) {
+    public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist) {
         this.audioPlayer = audioPlayer;
         this.icons = new ButtonIconFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
