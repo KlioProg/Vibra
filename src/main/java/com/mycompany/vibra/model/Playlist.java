@@ -63,5 +63,5 @@ public class Playlist implements Subject {
     public int getPlaylistId() { return playlist_id; }
     public String getText() { return text; }
     public int getUserId() { return user_id; }
-    public List<Track> getTracks() (return tracks;)
+    public List<Track> getTracks() { return tracks; }
 }
