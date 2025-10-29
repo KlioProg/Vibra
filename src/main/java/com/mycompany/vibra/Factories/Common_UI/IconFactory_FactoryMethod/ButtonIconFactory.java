@@ -14,8 +14,8 @@ public class ButtonIconFactory extends IconFactory {
             case "pause" -> createIcon("/images/button_pause.png", 80, 80);
             case "back" -> createIcon("/images/backButton.png", 39, 25);
             case "skip" -> createIcon("/images/Skip.png", 39, 25);
-            case "sounddown" -> createIcon("/images/soundDown.png", 16, 14);
-            case "soundup" -> createIcon("/images/SoundUp.png", 16, 14);
+            case "sound_down" -> createIcon("/images/soundDown.png", 16, 14);
+            case "sound_up" -> createIcon("/images/SoundUp.png", 16, 14);
             case "liked" -> createIcon("/images/like_button.png", 28, 28);
             case "dark" -> createIcon("/images/darkMode.png", 28, 28);
             case "light" -> createIcon("/images/lightMode.png", 28, 28);

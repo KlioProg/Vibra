@@ -14,20 +14,26 @@ import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 
+// This is the CRUCIAL import
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
     private final MusicPlayerPanel musicPlayerPanel;
+    private final TrackListPanel trackListPanel; // ✅ Reference to the list panel
 
     // Keep refs so we can update them on theme change
     private JPanel libraryPanel;
     private JLabel albumLabel;
     private JLabel yourLibraryLabel;
 
-    public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel) {
+    // ✅ UPDATED CONSTRUCTOR
+    public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel) {
         this.musicPlayerPanel = musicPlayerPanel;
+        this.trackListPanel = trackListPanel; // Store the reference
 
         setLayout(new BorderLayout());
         initUI();
@@ -37,45 +43,37 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         applyTheme();
     }
 
+    // Your UI code, unchanged
     private void initUI() {
         libraryPanel = new JPanel();
         libraryPanel.setLayout(new BoxLayout(libraryPanel, BoxLayout.Y_AXIS));
         libraryPanel.setOpaque(true);
         libraryPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 0, 0));
         libraryPanel.setPreferredSize(new Dimension(402, Integer.MAX_VALUE));
-
-        // Top panel: "Album" + buttons
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.setOpaque(false);
         topPanel.setAlignmentX(LEFT_ALIGNMENT);
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-
         albumLabel = new JLabel("Album");
         albumLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 36));
         topPanel.add(albumLabel);
         topPanel.add(Box.createHorizontalStrut(10));
-
-        // Buttons
         topPanel.add(createUploadButton());
         topPanel.add(Box.createHorizontalStrut(6));
         topPanel.add(createOpenFolderButton());
-
         libraryPanel.add(topPanel);
         libraryPanel.add(Box.createVerticalStrut(8));
-
         yourLibraryLabel = new JLabel("Your Library");
         yourLibraryLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 20f));
         yourLibraryLabel.setAlignmentX(LEFT_ALIGNMENT);
         libraryPanel.add(yourLibraryLabel);
-
         libraryPanel.add(Box.createVerticalStrut(12));
         libraryPanel.add(createPlaylistButton());
-
         add(libraryPanel, BorderLayout.WEST);
     }
 
-    // 🔹 Build a Track from file
+    // Your file extraction code, unchanged
     private Track extractTrackFromFile(File file) {
         try {
             Mp3File mp3 = new Mp3File(file);
@@ -100,7 +98,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         }
     }
 
-    //  Styled button helper
+    // Your button styling code, unchanged
     private RoundedButtonFactory createStyledButton(String text) {
         RoundedButtonFactory button = new RoundedButtonFactory(text, 30);
         button.setBackground(new Color(0x9D4EDD));
@@ -112,19 +110,16 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 button.setBackground(new Color(0x7B2CBF));
             }
-
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 button.setBackground(new Color(0x9D4EDD));
                 button.setForeground(new Color(0xF9F6EE));
             }
-
             @Override
             public void mousePressed(java.awt.event.MouseEvent e) {
                 button.setBackground(new Color(0x5A189A));
                 button.setForeground(new Color(0x9D4EDD));
             }
-
             @Override
             public void mouseReleased(java.awt.event.MouseEvent e) {
                 button.setBackground(new Color(0x7B2CBF));
@@ -134,7 +129,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    //  Upload Button
+    // ✅ UPDATED Upload Button
     private RoundedButtonFactory createUploadButton() {
         RoundedButtonFactory button = createStyledButton("Upload");
 
@@ -146,10 +141,26 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 
             int result = fileChooser.showOpenDialog(null);
             if (result == JFileChooser.APPROVE_OPTION) {
+                List<Track> loadedTracks = new ArrayList<>();
                 for (File selectedFile : fileChooser.getSelectedFiles()) {
                     Track track = extractTrackFromFile(selectedFile);
-                    if (track != null && musicPlayerPanel != null) {
-                        musicPlayerPanel.loadTrack(track);
+                    if (track != null) {
+                        loadedTracks.add(track);
+                    }
+                }
+
+                // Make sure we actually loaded tracks
+                if (!loadedTracks.isEmpty()) {
+
+                    // ✅ 1. This is your new code: It loads the list into the panel
+                    if (trackListPanel != null) {
+                        trackListPanel.loadTracksIntoPanel(loadedTracks);
+                    }
+
+                    // ✅ 2. This is your old code: It plays the FIRST track
+                    if (musicPlayerPanel != null) {
+                        // We get the first track from the list we just made
+                        musicPlayerPanel.loadTrack(loadedTracks.get(0));
                     }
                 }
             }
@@ -158,7 +169,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    //  Open Folder Button
+    // ✅ UPDATED Open Folder Button
     private RoundedButtonFactory createOpenFolderButton() {
         RoundedButtonFactory button = createStyledButton("Open Folder");
 
@@ -179,9 +190,9 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                         if (track != null) tracks.add(track);
                     }
 
-                    if (!tracks.isEmpty() && musicPlayerPanel != null) {
-                        // For now just play the first one
-                        musicPlayerPanel.loadTrack(tracks.get(0));
+                    // ✅ Send the new list to the TrackListPanel
+                    if (!tracks.isEmpty() && trackListPanel != null) {
+                        trackListPanel.loadTracksIntoPanel(tracks);
                     }
                 }
             }
@@ -190,17 +201,16 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    //  Playlist Button
+    // Your playlist button code, unchanged
     private RoundedButtonFactory createPlaylistButton() {
         RoundedButtonFactory button = createStyledButton("Playlist");
         button.addActionListener(e -> {
             System.out.println("Playlist button clicked!");
-            // TODO: implement playlist logic
         });
         return button;
     }
 
-    // === THEME HANDLING ===
+    // Your theme code, unchanged
     private void applyTheme() {
         ThemeManager tm = ThemeManager.getInstance();
         setBackground(tm.getSidebarColor());
@@ -210,6 +220,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         yourLibraryLabel.setForeground(tm.getForegroundColor());
     }
 
+    // Your theme code, unchanged
     @Override
     public void onThemeChanged(boolean isDarkMode) {
         applyTheme();

@@ -36,11 +36,10 @@ public class MainAppFrame extends JFrame {
         cardLayout.show(mainPanel,text);
     }
 
-
-
     public static void main(String[] args) {
         new MainAppFrame();
     }
+
 }
 
 

@@ -11,25 +11,28 @@ public class MusicPanel extends JPanel {
 
     private AudioPlayer audioPlayer;
     private MusicPlayerPanel musicPlayerPanel;
+    // We need to store these to pass them
+    private TrackListPanel trackListPanel;
+    private MainLibraryPanel mainLibraryPanel;
 
     public MusicPanel(IconFactory iconFactory) {
         setLayout(new BorderLayout());
 
-        // Shared AudioPlayer instance
+        // ✅ 1. Create the ONE shared AudioPlayer
         audioPlayer = new AudioPlayer();
 
-        // Left: Track list
-        TrackListPanel trackListPanel = new TrackListPanel();
+        // ✅ 2. Create the TrackListPanel and GIVE it the player
+        trackListPanel = new TrackListPanel(audioPlayer);
         trackListPanel.setPreferredSize(new Dimension(332, 0));
         add(trackListPanel, BorderLayout.WEST);
 
-        // Center: Music player panel (share AudioPlayer ✅)
+        // ✅ 3. Create the MusicPlayerPanel and GIVE it the player
         musicPlayerPanel = new MusicPlayerPanel(audioPlayer);
         musicPlayerPanel.setPreferredSize(new Dimension(610, 0));
         add(musicPlayerPanel, BorderLayout.CENTER);
 
-        // Right: Main library (pass MusicPlayerPanel ✅)
-        MainLibraryPanel mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel);
+        // ✅ 4. Create the MainLibraryPanel and GIVE it the other two panels
+        mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel);
         mainLibraryPanel.setPreferredSize(new Dimension(402, 0));
         add(mainLibraryPanel, BorderLayout.EAST);
     }
