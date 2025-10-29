@@ -1,5 +1,6 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player;
 
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Library_Panel.MainLibraryPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
