@@ -10,14 +10,20 @@ import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.Factories.Music_UI.CustomSliderUI;
 import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
+import com.mycompany.vibra.model.Playlist; //playlist import
+import com.mycompany.vibra.model.Observer; //observer import 
+import com.mycompany.vibra.model.TrackIterator; //iterator import 
+
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicSliderUI;
+
 import java.awt.*;
 
 import static com.mycompany.vibra.musicUtilities.Mp3Utils.formatMinutes;
 
-public class MusicPlayerPanel extends JPanel {
+public class MusicPlayerPanel extends JPanel implements Observer{
 
     private final AudioPlayer audioPlayer;
     private final IconFactory icons;
@@ -41,12 +47,23 @@ public class MusicPlayerPanel extends JPanel {
     private volatile boolean isPlaying = false; // Use volatile
     private boolean isLiked = false;
 
+    private Playlist currentPlaylist; //new added
+    private TrackIterator playlistIterator;
+    
+
+    // we only keep references, icons come from factory
     private ImageIcon playIcon, pauseIcon, heartIcon, likedIcon, defaultCover, themeButton;
 
-    public MusicPlayerPanel(AudioPlayer audioPlayer) {
+    public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist) {
         this.audioPlayer = audioPlayer;
         this.icons = new ButtonIconFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
+
+         //for the observer
+        this.currentPlaylist = playlist;
+        this.currentPlaylist.addObserver(this); // Register as an observer
+        this.playlistIterator = currentPlaylist.createIterator();
+        // end for this new added 
 
         setLayout(new BorderLayout(15, 15));
         setBorder(new EmptyBorder(30, 40, 30, 40));
@@ -215,19 +232,36 @@ public class MusicPlayerPanel extends JPanel {
         add(controlsPanel, BorderLayout.SOUTH);
 
 
+        // REPLACE the playPauseButton listener with this:
         playPauseButton.addActionListener(e -> {
             if (currentTrack == null) return;
 
-            if (!isPlaying) {
-                audioPlayer.play(currentTrack);
-                progressTimer.start();
-                playPauseButton.setIcon(playIcon);
-                isPlaying = true;
-            } else {
+            if (isPlaying) {
+                // It's playing, so pause it
                 audioPlayer.pause();
                 progressTimer.stop();
-                playPauseButton.setIcon(pauseIcon);
+                playPauseButton.setIcon(playIcon);
                 isPlaying = false;
+            } else {
+                // It's paused or stopped, so resume/play it
+                audioPlayer.resume(); // resume() will handle starting
+                progressTimer.start();
+                playPauseButton.setIcon(pauseIcon);
+                isPlaying = true;
+            }
+        });
+         // listeners for iterator
+        prevButton.addActionListener(e -> {
+            if (playlistIterator.hasPrevious()) {
+                Track prevTrack = playlistIterator.previous();
+                currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(prevTrack));
+            }
+        });
+
+        nextButton.addActionListener(e -> {
+            if (playlistIterator.hasNext()) {
+                Track nextTrack = playlistIterator.next();
+                currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(nextTrack));
             }
         });
 //        // listeners for iterator
@@ -255,36 +289,81 @@ public class MusicPlayerPanel extends JPanel {
             audioPlayer.setVolume(value);
         });
 
-        progressSlider.addChangeListener(e -> {
-            if (progressSlider.getValueIsAdjusting() || currentTrack == null) return;
-            long newPos = (long) (currentTrack.getDurationMs() *
-                    (progressSlider.getValue() / 1000.0));
-            audioPlayer.setPosition(newPos);
+        // REPLACE the progressSlider.addChangeListener with this:
+        progressSlider.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (currentTrack == null) return;
+
+                // Stop the timer while we're interacting
+                if (isPlaying) {
+                    progressTimer.stop();
+                }
+
+                // --- THIS IS THE NEW "TAP-TO-SEEK" LOGIC ---
+                
+                // Get the UI component that handles the slider's appearance
+                javax.swing.plaf.SliderUI sliderUI = progressSlider.getUI();
+                
+                // Ask the UI to calculate the slider's value based on the mouse's X position
+                int value = ((BasicSliderUI) sliderUI).valueForXPosition(e.getX());
+                
+                // Manually set the slider's value to where the user clicked
+                progressSlider.setValue(value);
+                
+                // --- END OF NEW LOGIC ---
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                if (currentTrack == null) return;
+
+                // Calculate new position in milliseconds
+                long newPos = (long) (currentTrack.getDurationMs() *
+                        (progressSlider.getValue() / 1000.0));
+
+                // Call our new seek method!
+                audioPlayer.seek(newPos);
+
+                // Restart timer and set UI to "playing"
+                progressTimer.start();
+                playPauseButton.setIcon(pauseIcon);
+                isPlaying = true;
+            }
         });
     }
 
+    // ADD THIS METHOD BACK (or ensure it's correct):
     private void initTimer() {
         progressTimer = new Timer(500, e -> {
-            if (currentTrack != null) {
+            if (currentTrack != null && (audioPlayer.isPlaying() || audioPlayer.isPaused())) {
                 long pos = audioPlayer.getCurrentPosition();
                 long dur = currentTrack.getDurationMs();
+                
                 if (dur > 0) {
                     int value = (int) ((pos / (double) dur) * 1000);
-                    // Only update if the slider isn't being dragged
-                    if (!progressSlider.getValueIsAdjusting()) {
-                        progressSlider.setValue(value);
-                    }
+                    progressSlider.setValue(value);
                     currentTimeLabel.setText(formatMinutes((int) pos));
-                    totalTimeLabel.setText(formatMinutes((int) dur));
                 }
-
-                // Check if playback finished
-                if (isPlaying && !audioPlayer.isPlaying() && !audioPlayer.isPaused() && pos >= dur) {
+            }
+            
+            // Check if song finished naturally
+            if (currentTrack != null && !audioPlayer.isPlaying() && !audioPlayer.isPaused() && isPlaying) {
+                // It finished.
+                long pos = audioPlayer.getCurrentPosition();
+                long dur = currentTrack.getDurationMs();
+                
+                // Check if we are at the end (within 1.5 seconds)
+                if (pos >= dur - 1500) { 
                     playPauseButton.setIcon(playIcon);
                     isPlaying = false;
                     progressTimer.stop();
-                    progressSlider.setValue(0);
-                    currentTimeLabel.setText("0:00");
+                    progressSlider.setValue(1000); // Set to end
+                    
+                    // --- Optional: Auto-play next song ---
+                    // if (playlistIterator.hasNext()) {
+                    //     nextButton.doClick();
+                    // }
                 }
             }
         });
@@ -320,12 +399,15 @@ public class MusicPlayerPanel extends JPanel {
         repaint();
     }
 
+
+
+    // REPLACE your loadTrack method with this:
     public void loadTrack(Track track) {
         this.currentTrack = track;
         trackTitleLabel.setText(track.getTitle());
         trackArtistLabel.setText(track.getArtist());
 
-        // Update album art
+        // 🔥 Update album art (using your Track class!)
         Image albumArt = track.getAlbumArtImage();
         if (albumArt != null) {
             albumArtLabel.setIcon(new ImageIcon(
@@ -335,20 +417,23 @@ public class MusicPlayerPanel extends JPanel {
             albumArtLabel.setIcon(defaultCover);
         }
 
-        if (audioPlayer.isPlaying() || audioPlayer.isPaused()) {
-            audioPlayer.stop();
-            progressTimer.stop();
-        }
+        // Stop current playback and reset UI
+        audioPlayer.stop(); // Full stop and reset
+        progressTimer.stop();
 
         currentTimeLabel.setText("0:00");
         totalTimeLabel.setText(formatMinutes((int) track.getDurationMs()));
         progressSlider.setValue(0);
+        
+        // Set volume from the slider (in case it changed)
         float value = volumeSlider.getValue() / 100f;
         audioPlayer.setVolume(value);
 
-        // ✅ FIX 3: Reset to PLAY icon
+        // Play the new track
+        audioPlayer.play(track);
+        progressTimer.start();
         playPauseButton.setIcon(pauseIcon);
-        isPlaying = false;
+        isPlaying = true;
         isLiked = false;
         likeButton.setIcon(heartIcon);
 
@@ -363,3 +448,15 @@ public class MusicPlayerPanel extends JPanel {
 //        isPlaying = true;
     }
 }
+    }
+
+    @Override //for update method
+    public void update() {
+        Track currentTrack = currentPlaylist.getCurrentTrack();
+        if (currentTrack != null) {
+            loadTrack(currentTrack);
+        }
+    }
+}
+
+

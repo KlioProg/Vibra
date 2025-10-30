@@ -72,11 +72,11 @@ public class AudioPlayer {
 
     public void resume() {
         System.out.println("=== RESUME CALLED ===");
-        if (!isPaused || currentTrack == null) return;
+        if (isPlaying || currentTrack == null) return; // Don't resume if already playing
 
         isPaused = false;
-        // Resume from current position - but for now, just restart
-        startSimplePlayback();
+        // This will resume from currentPositionMs
+        startSimplePlayback(); 
     }
 
     public void stop() {
@@ -119,10 +119,11 @@ public class AudioPlayer {
 }
 
 
-    // Simplified - no seeking for now, just return current position
     public void setPosition(long ms) {
-        System.out.println("=== SEEK IGNORED (for now) === " + ms + "ms");
-        // For now, ignore seeking to focus on basic playback
+        // We only seek if the user is dragging the slider.
+        // We'll call the full seek() method on mouse release.
+        currentPositionMs = ms;
+        playedSamples = (ms * sampleRate) / 1000L;
     }
 
     public long getCurrentPosition() {
@@ -135,6 +136,23 @@ public class AudioPlayer {
     public boolean isPlaying() { return isPlaying; }
     public boolean isPaused() { return isPaused; }
     public Track getCurrentTrack() { return currentTrack; }
+
+    public void seek(long ms) {
+        if (currentTrack == null) return;
+
+        // Set the new position
+        currentPositionMs = ms;
+
+        // Calculate samples to skip
+        playedSamples = (ms * sampleRate) / 1000L;
+
+        // Stop the current playback thread
+        stopInternal(false); // false = don't reset position vars
+
+        // Restart playback from the new position
+        // startSimplePlayback() will read currentPositionMs
+        startSimplePlayback();
+    }
 
     // ========== SIMPLE PLAYBACK - NO SEEKING ==========
     private void startSimplePlayback() {

@@ -1,6 +1,6 @@
 package com.mycompany.vibra.Content.Main_Page;
 
-import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.likedPanel;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPanel;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
@@ -52,7 +52,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         iconFactory = isDark ? new DarkModeIconFactory() : new LightModeIconFactory();
 
         contentPanel.add(new MusicPanel(iconFactory), "MusicPlayer");
-        contentPanel.add(new likedPanel(iconFactory), "Liked");
+        contentPanel.add(new LikedPanel(), "Liked");
 
         sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
