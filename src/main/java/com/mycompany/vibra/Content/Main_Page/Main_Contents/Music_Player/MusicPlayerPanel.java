@@ -447,8 +447,6 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 //        playPauseButton.setIcon(playIcon); // Show PAUSE icon
 //        isPlaying = true;
     }
-}
-    }
 
     @Override //for update method
     public void update() {
@@ -457,6 +455,11 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             loadTrack(currentTrack);
         }
     }
+    
 }
+    
+
+    
+
 
 
