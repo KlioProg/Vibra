@@ -1,18 +1,13 @@
-package com.mycompany.vibra.Content.Create_Account;
+package com.mycompany.vibra.Content.ErrorPanel;
 
-
-
+import com.mycompany.vibra.Content.Create_Account.createAccPanel;
 import com.mycompany.vibra.Factories.Common_UI.BackgroundFactory;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Toolkit;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
-public class CreateWindow extends JFrame {
-    public CreateWindow() {
+import javax.swing.*;
+import java.awt.*;
+
+public class CreateErrorWindow extends JFrame{
+    public CreateErrorWindow() {
         GridBagConstraints gbc = new GridBagConstraints();
         SwingUtilities.invokeLater(() -> {
             Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -33,16 +28,19 @@ public class CreateWindow extends JFrame {
 
 
             //Center
-            JPanel login = new createAccPanel();
+            JPanel Error = new CreateErrorPanel();
             gbc.gridx = 0;
             gbc.gridy = 0;
             gbc.weightx = 1.0;
             gbc.weighty = 1.0;
             gbc.anchor = GridBagConstraints.CENTER;
-            frame.add(login, gbc);
+            frame.add(Error, gbc);
 
             frame.setVisible(true);
         });
     }
 
+    public static void main(String[] args) {
+        new CreateErrorWindow();
+    }
 }

@@ -46,7 +46,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     private Track currentTrack;
     private Timer progressTimer;
     private volatile boolean isPlaying = false; // Use volatile
-    private boolean isLiked = false;
+    public boolean isLiked = false; // boolean for likedpanel.
 
     private Playlist currentPlaylist; //new added
     private TrackIterator playlistIterator;
@@ -266,6 +266,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
                 currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(nextTrack));
             }
         });
+
 //        // listeners for iterator
 //        prevButton.addActionListener(e -> {
 //            if (playlistIterator.hasPrevious()) {
@@ -387,13 +388,13 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         currentTimeLabel.setForeground(ThemeManager.getInstance().getAccentColor());
         totalTimeLabel.setForeground(isDark ? new Color(0xB0B0B0) : new Color(80, 80, 80));
 
-        // ✅ Only replace album art if there is NO album cover
+        // Only replace album art if there is NO album cover
         if (albumArtLabel.getIcon() == null ||
                 (currentTrack == null || currentTrack.getAlbumArtImage() == null)) {
             albumArtLabel.setIcon(defaultCover);
         }
 
-        // ✅ Update like/play icons correctly
+        // Update like/play icons correctly
         likeButton.setIcon(isLiked ? likedIcon : heartIcon);
         playPauseButton.setIcon(isPlaying ? playIcon : pauseIcon);
 
@@ -410,7 +411,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         trackTitleLabel.setText(track.getTitle());
         trackArtistLabel.setText(track.getArtist());
 
-        // 🔥 Update album art (using your Track class!)
+        // Update album art (using your Track class!)
         Image albumArt = track.getAlbumArtImage();
         if (albumArt != null) {
             albumArtLabel.setIcon(new ImageIcon(

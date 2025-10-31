@@ -172,11 +172,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
 
         return logout;
     }
-
-
-
-
-
+    
     private void applyTheme(boolean isDarkMode) {
         // Update the theme factory reference
         iconFactory = isDarkMode ? new DarkModeIconFactory() : new LightModeIconFactory();

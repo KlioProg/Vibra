@@ -1,12 +1,15 @@
 package com.mycompany.vibra.Content.Login_Panel;
 
 import com.mycompany.vibra.Content.Create_Account.CreateWindow;
+import com.mycompany.vibra.Content.ErrorPanel.CreateErrorPanel;
 import com.mycompany.vibra.Content.MainAppFrame;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.CommonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedPanelFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedTextFieldFactory;
 import com.mycompany.vibra.model.User;
@@ -23,12 +26,14 @@ public class LoginContentPanel extends JPanel {
         private RoundedTextFieldFactory password;
         private IconFactory iconFactory;
         FontFactory fontFactory = new DunbarFactory();
-
+        IconFactory icon = new CommonIconFactory();
+        private RoundedPanelFactory errorPanel; // <-- Make it a field
 
     public LoginContentPanel() {
             setOpaque(false);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             this.iconFactory = new ButtonIconFactory();
+            this.errorPanel = createErrorPanel();
 
 
             // Top glue
@@ -55,7 +60,6 @@ public class LoginContentPanel extends JPanel {
             contentPanel.setBackground(new Color(0x100D0D));
             contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
             contentPanel.setOpaque(false);
-
             // Logo
             JLabel imageLabel = new JLabel(iconFactory.createIcon("vibra"));
             imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -71,6 +75,7 @@ public class LoginContentPanel extends JPanel {
             label2.setAlignmentX(Component.CENTER_ALIGNMENT);
             label2.setFont(fontFactory.createFont("dunbartall_book", 16));
             label2.setForeground(Color.WHITE);
+
 
 
             // Fields: only username + password
@@ -89,7 +94,10 @@ public class LoginContentPanel extends JPanel {
             contentPanel.add(username);
             contentPanel.add(Box.createVerticalStrut(12));
             contentPanel.add(password);
-            contentPanel.add(Box.createVerticalStrut(28));
+            contentPanel.add(Box.createVerticalStrut(12));
+            contentPanel.add(this.errorPanel); // Add it to your layout
+            errorPanel.setVisible(false);
+            contentPanel.add(Box.createVerticalStrut(12));
             contentPanel.add(startButton);
             contentPanel.add(Box.createVerticalStrut(4));
             contentPanel.add(createAccountLabel());
@@ -108,7 +116,35 @@ public class LoginContentPanel extends JPanel {
             return textField;
         }
 
-        private RoundedButtonFactory button(String text) {
+    /**
+     * Creates and configures a standardized error message panel.
+     * Assumes 'iconFactory' and 'fontFactory' are available as class fields.
+     */
+    private RoundedPanelFactory createErrorPanel() {
+        Color errorBackground = new Color(0xF9F6EE);
+        Color errorBorder = new Color(0xC1121F);
+        Color errorText = new Color(0xC1121F);
+
+        RoundedPanelFactory errorPanel = new RoundedPanelFactory(
+                16,                      // Corner radius
+                errorBackground,         // Background color
+                errorBorder,             // Border color
+                1,                       // Border thickness (using 1 from your example)
+                350,                     // Width
+                44                       // Height
+        );
+        errorPanel.addIconWithText(
+                icon.createIcon("error"),
+                "Your Email or Password is incorrect!",
+                fontFactory.createFont("dunbartall_book", 16),
+                errorText
+        );
+        errorPanel.setVisible(false);
+
+        return errorPanel;
+    }
+
+    private RoundedButtonFactory button(String text) {
             RoundedButtonFactory buttons = new RoundedButtonFactory(text, 40);
             buttons.setMaximumSize(new Dimension(350, 44));
             buttons.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -141,37 +177,40 @@ public class LoginContentPanel extends JPanel {
 
                     String userText = username.getText().trim();
                     String passwordText = password.getText().trim();
-
                     try {
                         AuthService authService = new AuthService();
                         User user = authService.login(userText, passwordText);
 
                         if (user != null) {
+                            // --- SUCCESS ---
                             JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(LoginContentPanel.this);
                             MainAppFrame mainFrame = new MainAppFrame();
                             mainFrame.setVisible(true);
                             topFrame.dispose();
                         } else {
-                            JOptionPane.showMessageDialog(
-                                LoginContentPanel.this,
-                                "Invalid username or password.",
-                                "Login Failed",
-                                JOptionPane.ERROR_MESSAGE
-                                );
+                            // --- INVALID CREDENTIALS ---
+                            errorPanel.setVisible(true);
                         }
+
                     } catch (Exception ex) {
-                        javax.swing.JOptionPane.showMessageDialog(
-                                LoginContentPanel.this,
-                                "Login failed: " + ex.getMessage(),
-                                "Error",
-                                javax.swing.JOptionPane.ERROR_MESSAGE
-                        );
+                        // --- CRITICAL SYSTEM ERROR ---
+                        ex.printStackTrace();
+
+                        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(LoginContentPanel.this);
+                        if (frame != null) {
+                            JPanel newPanel = new CreateErrorPanel();
+                            frame.getContentPane().removeAll();
+                            frame.getContentPane().add(newPanel);
+                            frame.revalidate();
+                            frame.repaint();
+                        }
                     }
                 }
             });
 
             return buttons;
         }
+
 
     private JLabel createAccountLabel() {
         JLabel label = new JLabel("Don't have an account? Let's Create one!");
