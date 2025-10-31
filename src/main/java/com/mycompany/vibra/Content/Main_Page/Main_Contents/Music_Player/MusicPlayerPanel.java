@@ -2,6 +2,7 @@ package com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player;
 
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+import com.mycompany.vibra.Factories.Common_UI.HoverPopUpMessageFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
@@ -22,6 +23,7 @@ import javax.swing.plaf.basic.BasicSliderUI;
 
 import java.awt.*;
 
+import static com.mycompany.vibra.Factories.Common_UI.HoverPopUpMessageFactory.attachHoverPopup;
 import static com.mycompany.vibra.musicUtilities.Mp3Utils.formatMinutes;
 
 public class MusicPlayerPanel extends JPanel implements Observer{
@@ -77,7 +79,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     }
 
     private void initUI() {
-        // Loading icons
+        HoverPopUpMessageFactory hoverPopup = new HoverPopUpMessageFactory();
         playIcon = icons.createIcon("play");
         pauseIcon = icons.createIcon("pause");
         ImageIcon backIcon = icons.createIcon("back");
@@ -187,6 +189,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         rightPanel.setOpaque(false);
         likeButton = new JButton(heartIcon);
+        hoverPopup.attachHoverPopup(likeButton, "Like to add music to your liked playlist!");
         likeButton.setBorderPainted(false);
         likeButton.setContentAreaFilled(false);
         likeButton.setFocusPainted(false);
