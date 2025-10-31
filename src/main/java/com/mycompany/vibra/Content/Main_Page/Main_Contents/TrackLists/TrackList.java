@@ -1,6 +1,7 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists;
 
-import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
@@ -32,6 +33,7 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
     private JLabel songNameLabel;
     private JLabel artistNameLabel;
     private JLabel songDurationLabel;
+    FontFactory fontFactory = new DunbarFactory();
 
     /**
      * ✅ NEW CONSTRUCTOR
@@ -74,7 +76,7 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
     private void trackLoader(int trackNumber) {
         // Track number
         trackNumberLabel = new JLabel(String.format("%02d", trackNumber));
-        trackNumberLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 14f));
+        trackNumberLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
         trackNumberLabel.setPreferredSize(new Dimension(30, 20));
         trackNumberLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 5));
         add(trackNumberLabel);
@@ -91,20 +93,20 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
 
         // ✅ Get title from track object
         songNameLabel = new JLabel(track.getTitle());
-        songNameLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 14f));
+        songNameLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
         textPanel.add(songNameLabel);
         textPanel.add(Box.createVerticalStrut(2));
 
         // ✅ Get artist from track object
         artistNameLabel = new JLabel(track.getArtist());
-        artistNameLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 12f));
+        artistNameLabel.setFont(fontFactory.createFont("dunbartall_book", 12));
         textPanel.add(artistNameLabel);
         add(textPanel);
 
         // Song duration
         // ✅ Get duration from track object and format it
         songDurationLabel = new JLabel(formatDuration(track.getDuration()));
-        songDurationLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 14f));
+        songDurationLabel.setFont(fontFactory.createFont("dunbartall_book", 14));
         songDurationLabel.setPreferredSize(new Dimension(50, 20));
         songDurationLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         add(songDurationLabel);

@@ -1,5 +1,7 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player;
 
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
@@ -9,7 +11,6 @@ import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.Factories.Music_UI.CustomSliderUI;
-import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
 import com.mycompany.vibra.model.Playlist; //playlist import
 import com.mycompany.vibra.model.Observer; //observer import 
 import com.mycompany.vibra.model.TrackIterator; //iterator import 
@@ -49,6 +50,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
     private Playlist currentPlaylist; //new added
     private TrackIterator playlistIterator;
+    FontFactory fontFactory = new DunbarFactory();
     
 
     // we only keep references, icons come from factory
@@ -103,14 +105,14 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         trackTitleLabel = new JLabel("Track Title", SwingConstants.CENTER);
         trackTitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         trackTitleLabel.setForeground(new Color(0xFFFFFF));
-        trackTitleLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 16f));
+        trackTitleLabel.setFont(fontFactory.createFont("dunbartall_bold", 16));
         trackTitleLabel.setMaximumSize(new Dimension(300, 30));
         trackTitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         trackTitleLabel.setVerticalAlignment(SwingConstants.CENTER);
         trackArtistLabel = new JLabel("Artist", SwingConstants.CENTER);
         trackArtistLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         trackArtistLabel.setForeground(new Color(0xC0C0C0));
-        trackArtistLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 13f));
+        trackArtistLabel.setFont(fontFactory.createFont("dunbartall_bold", 13));
         trackArtistLabel.setMaximumSize(new Dimension(250, 25));
         trackArtistLabel.setHorizontalAlignment(SwingConstants.CENTER);
         trackArtistLabel.setVerticalAlignment(SwingConstants.CENTER);
@@ -130,10 +132,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         progressPanel.setBorder(new EmptyBorder(0, 20, 15, 20));
         currentTimeLabel = new JLabel("0:00");
         currentTimeLabel.setForeground(new Color(0x9D4EDD));
-        currentTimeLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 14f));
+        currentTimeLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
         totalTimeLabel = new JLabel("0:00");
         totalTimeLabel.setForeground(new Color(0xB0B0B0));
-        totalTimeLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 14f));
+        totalTimeLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
         progressSlider = new JSlider(0, 1000, 0);
         progressSlider.setUI(new CustomSliderUI(progressSlider, new Color(0x9D4EDD)));
         progressSlider.setOpaque(false);
@@ -197,7 +199,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
         JLabel nowPlayingLabel = new JLabel("Now playing");
         nowPlayingLabel.setForeground(new Color(0xB0B0B0));
-        nowPlayingLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 16f));
+        nowPlayingLabel.setFont(fontFactory.createFont("dunbartall_bold", 16));
         nowPlayingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         nowPlayingLabel.setBorder(new EmptyBorder(0, 0, 10, 0));
         nowPlayingLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -385,19 +387,20 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         currentTimeLabel.setForeground(ThemeManager.getInstance().getAccentColor());
         totalTimeLabel.setForeground(isDark ? new Color(0xB0B0B0) : new Color(80, 80, 80));
 
-        // Update icons
-        if (currentTrack == null || currentTrack.getAlbumArtImage() == null) {
+        // ✅ Only replace album art if there is NO album cover
+        if (albumArtLabel.getIcon() == null ||
+                (currentTrack == null || currentTrack.getAlbumArtImage() == null)) {
             albumArtLabel.setIcon(defaultCover);
         }
-        likeButton.setIcon(isLiked ? likedIcon : heartIcon);
 
-        // ✅ FIX 4: Correct theme update logic
-        // INSIDE applyTheme()...
-        playPauseButton.setIcon(isPlaying ? playIcon : pauseIcon); // ✅ FIX
+        // ✅ Update like/play icons correctly
+        likeButton.setIcon(isLiked ? likedIcon : heartIcon);
+        playPauseButton.setIcon(isPlaying ? playIcon : pauseIcon);
 
         revalidate();
         repaint();
     }
+
 
 
 

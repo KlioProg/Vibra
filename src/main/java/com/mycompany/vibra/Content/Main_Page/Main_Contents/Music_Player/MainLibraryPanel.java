@@ -9,9 +9,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
-import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 
 // This is the CRUCIAL import
@@ -29,6 +30,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private JPanel libraryPanel;
     private JLabel albumLabel;
     private JLabel yourLibraryLabel;
+    FontFactory fontFactory = new DunbarFactory();
 
     // ✅ UPDATED CONSTRUCTOR
     public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel) {
@@ -56,7 +58,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         topPanel.setAlignmentX(LEFT_ALIGNMENT);
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         albumLabel = new JLabel("Album");
-        albumLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 36));
+        albumLabel.setFont(fontFactory.createFont("dunbartall_bold", 32));
         topPanel.add(albumLabel);
         topPanel.add(Box.createHorizontalStrut(10));
         topPanel.add(createUploadButton());
@@ -65,7 +67,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         libraryPanel.add(topPanel);
         libraryPanel.add(Box.createVerticalStrut(8));
         yourLibraryLabel = new JLabel("Your Library");
-        yourLibraryLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 20f));
+        yourLibraryLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
         yourLibraryLabel.setAlignmentX(LEFT_ALIGNMENT);
         libraryPanel.add(yourLibraryLabel);
         libraryPanel.add(Box.createVerticalStrut(12));
@@ -103,7 +105,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         RoundedButtonFactory button = new RoundedButtonFactory(text, 30);
         button.setBackground(new Color(0x9D4EDD));
         button.setForeground(new Color(0xF9F6EE));
-        button.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 16f));
+        button.setFont(fontFactory.createFont("dunbartall_bold", 16));
 
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override

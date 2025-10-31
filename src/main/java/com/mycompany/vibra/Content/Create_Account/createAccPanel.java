@@ -14,6 +14,8 @@ import javax.swing.SwingUtilities;
 
 import com.mycompany.vibra.Content.MainAppFrame;
 import com.mycompany.vibra.Factories.Common_UI.*;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.model.User;
@@ -24,6 +26,7 @@ public class createAccPanel extends JPanel {
     private RoundedTextFieldFactory username;
     private RoundedTextFieldFactory password;
     private IconFactory iconFactory;
+    FontFactory fontFactory = new DunbarFactory();
 
     public createAccPanel() {
         setOpaque(false);
@@ -63,13 +66,13 @@ public class createAccPanel extends JPanel {
         // Title
         JLabel label1 = new JLabel("Get Grooving");
         label1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        label1.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 32f));
+        label1.setFont(fontFactory.createFont("dunbartall_bold", 32));
         label1.setForeground(Color.WHITE);
 
         // Subtitle
         JLabel label2 = new JLabel("by creating a free account");
         label2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        label2.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 16f));
+        label2.setFont(fontFactory.createFont("dunbartall_book", 16));
         label2.setForeground(Color.WHITE);
 
         // Fields: only username + password
@@ -100,7 +103,7 @@ public class createAccPanel extends JPanel {
         textField.setAlignmentX(Component.CENTER_ALIGNMENT);
         textField.setBackground(new Color(0xF9F6EE));
         textField.setForeground(new Color(0x100D0D));
-        textField.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 16f));
+        textField.setFont(fontFactory.createFont("dunbartall_book", 16));
         textField.setPlaceholder(placeholder);
         return textField;
     }
@@ -111,7 +114,7 @@ public class createAccPanel extends JPanel {
         buttons.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttons.setBackground(new Color(0x9D4EDD));
         buttons.setForeground(new Color(0xF9F6EE));
-        buttons.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 24f));
+        buttons.setFont(fontFactory.createFont("dunbartall_book", 24));
 
         buttons.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override

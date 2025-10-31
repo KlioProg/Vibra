@@ -1,5 +1,7 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel;
-import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -27,12 +29,14 @@ public class LikedPanel extends JPanel {
     private static final Color TEXT_GRAY = new Color(169, 169, 169);    // Light gray
     private static final Color TEXT_PURPLE = new Color(168, 85, 247);      // #A855F7
     private static final Color BORDER_SUBTLE = new Color(255, 255, 255, 25);
+
     
     // UI Components
     private JPanel songListContainer;
     private JPanel emptyStateContent;
     private JPanel darkBackdrop;
     private List<Song> displaySongs;
+    FontFactory fontFactory = new DunbarFactory();
     
     // REMOVED fontLoader field
 
@@ -60,7 +64,7 @@ public class LikedPanel extends JPanel {
         // Header: "Liked Songs"
         JLabel header = new JLabel("Liked Songs");
         // USE FONTLOADERFACTORY
-        header.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 50f));
+        header.setFont(fontFactory.createFont("dunbartall_bold", 50));
         header.setForeground(TEXT_WHITE);
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         topSection.add(header);
@@ -70,7 +74,7 @@ public class LikedPanel extends JPanel {
         // Subheader: "Certified bops only."
         JLabel subheader = new JLabel("Certified bops only.");
         // USE FONTLOADERFACTORY
-        subheader.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 20f));
+        subheader.setFont(fontFactory.createFont("dunbartall_bold", 20));
         subheader.setForeground(TEXT_WHITE);
         subheader.setAlignmentX(Component.LEFT_ALIGNMENT);
         topSection.add(subheader);
@@ -183,7 +187,7 @@ public class LikedPanel extends JPanel {
         gbc.insets = new Insets(0, 0, 0, 0);
         JLabel emptyMessage = new JLabel("Crickets..* tap that heart and add some bangers!");
         // USE FONTLOADERFACTORY
-        emptyMessage.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 28f));
+        emptyMessage.setFont(fontFactory.createFont("dunbartall_bold", 28));
         emptyMessage.setForeground(TEXT_GRAY);
         emptyMessage.setHorizontalAlignment(SwingConstants.CENTER);
         emptyPanel.add(emptyMessage, gbc);
@@ -226,7 +230,7 @@ public class LikedPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         JLabel titleLabel = new JLabel("Title");
         // USE FONTLOADERFACTORY
-        titleLabel.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 20f));
+        titleLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
         titleLabel.setForeground(TEXT_PURPLE);
         headerContent.add(titleLabel, gbc);
         
@@ -235,7 +239,7 @@ public class LikedPanel extends JPanel {
         gbc.weightx = 0.4;
         JLabel artistLabel = new JLabel("Artist");
         // USE FONTLOADERFACTORY
-        artistLabel.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 20f));
+        artistLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
         artistLabel.setForeground(TEXT_PURPLE);
         headerContent.add(artistLabel, gbc);
         
@@ -245,7 +249,7 @@ public class LikedPanel extends JPanel {
         gbc.anchor = GridBagConstraints.EAST;
         JLabel durationLabel = new JLabel("Duration");
         // USE FONTLOADERFACTORY
-        durationLabel.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 20f));
+        durationLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
         durationLabel.setForeground(TEXT_PURPLE);
         headerContent.add(durationLabel, gbc);
         
@@ -331,7 +335,7 @@ public class LikedPanel extends JPanel {
             gbc.weightx = 0.4;
             JLabel titleLabel = new JLabel(song.getTitle());
             // USE FONTLOADERFACTORY
-            titleLabel.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 15f));
+            titleLabel.setFont(fontFactory.createFont("dunbartall_bold", 15));
             titleLabel.setForeground(TEXT_WHITE);
             contentPanel.add(titleLabel, gbc);
             
@@ -340,7 +344,7 @@ public class LikedPanel extends JPanel {
             gbc.weightx = 0.4;
             JLabel artistLabel = new JLabel(song.getArtist());
             // USE FONTLOADERFACTORY
-            artistLabel.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 13f));
+            artistLabel.setFont(fontFactory.createFont("dunbartall_bold", 13));
             artistLabel.setForeground(TEXT_GRAY);
             contentPanel.add(artistLabel, gbc);
             
@@ -350,7 +354,7 @@ public class LikedPanel extends JPanel {
             gbc.anchor = GridBagConstraints.EAST;
             JLabel durationLabel = new JLabel(song.getDuration());
             // USE FONTLOADERFACTORY
-            durationLabel.setFont(FontLoaderFactory.loadFont("/fonts/Poppins-SemiBold.ttf", 13f));
+            durationLabel.setFont(fontFactory.createFont("dunbartall_bold", 13));
             durationLabel.setForeground(TEXT_GRAY);
             contentPanel.add(durationLabel, gbc);
             
@@ -542,23 +546,6 @@ public class LikedPanel extends JPanel {
         public String getTitle() { return title; }
         public String getArtist() { return artist; }
         public String getDuration() { return duration; }
-    }
-    
-    // === DEMO ===
-    
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Liked Songs Panel");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            
-            // Create panel
-            LikedPanel panel = new LikedPanel();
-            
-            frame.add(panel, BorderLayout.CENTER);
-            frame.setSize(1100, 1150);
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-        });
     }
 }
 

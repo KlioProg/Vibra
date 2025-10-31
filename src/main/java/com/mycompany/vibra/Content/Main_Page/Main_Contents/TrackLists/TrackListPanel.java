@@ -15,8 +15,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
-import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.musicUtilities.Track;
@@ -32,6 +33,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
 
     private JLabel trackLabel;
     private JLabel playLabel;
+    FontFactory fontFactory = new DunbarFactory();
 
     public TrackListPanel(AudioPlayer audioPlayer) {
         setLayout(new BorderLayout());
@@ -54,7 +56,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         trackLabel = new JLabel("Track List");
-        trackLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 36));
+        trackLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
         topPanel.add(trackLabel);
 
         topPanel.add(Box.createHorizontalStrut(16)); // From your sample
@@ -69,7 +71,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         trackListContainer.setBorder(BorderFactory.createEmptyBorder(10, 12, 0, 12));
 
         playLabel = new JLabel("What’s Playing:");
-        playLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 24f));
+        playLabel.setFont(fontFactory.createFont("dunbartall_bold", 24));
         playLabel.setAlignmentX(LEFT_ALIGNMENT);
         trackListContainer.add(playLabel);
         trackListContainer.add(Box.createVerticalStrut(12));
@@ -139,7 +141,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         button.setPreferredSize(new Dimension(133, 29));
         button.setBackground(new Color(0x9D4EDD));
         button.setForeground(new Color(0xF9F6EE));
-        button.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 16f));
+        button.setFont(fontFactory.createFont("dunbartall_bold", 16));
 
         button.addActionListener(e -> System.out.println("Save Playlist button clicked!"));
 

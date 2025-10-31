@@ -1,9 +1,9 @@
 package com.mycompany.vibra.Content.Login_Panel;
 
 import com.mycompany.vibra.Content.Create_Account.CreateWindow;
-import com.mycompany.vibra.Content.Create_Account.createAccPanel;
 import com.mycompany.vibra.Content.MainAppFrame;
-import com.mycompany.vibra.Factories.Common_UI.FontLoaderFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
@@ -22,8 +22,10 @@ public class LoginContentPanel extends JPanel {
         private RoundedTextFieldFactory username;
         private RoundedTextFieldFactory password;
         private IconFactory iconFactory;
+        FontFactory fontFactory = new DunbarFactory();
 
-        public LoginContentPanel() {
+
+    public LoginContentPanel() {
             setOpaque(false);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             this.iconFactory = new ButtonIconFactory();
@@ -61,13 +63,13 @@ public class LoginContentPanel extends JPanel {
             // Title
             JLabel label1 = new JLabel("Login to Continue");
             label1.setAlignmentX(Component.CENTER_ALIGNMENT);
-            label1.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 32f));
+            label1.setFont(fontFactory.createFont("dunbartall_bold", 32));
             label1.setForeground(Color.WHITE);
 
             // Subtitle
             JLabel label2 = new JLabel("let's get it groovin!");
             label2.setAlignmentX(Component.CENTER_ALIGNMENT);
-            label2.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 16f));
+            label2.setFont(fontFactory.createFont("dunbartall_book", 16));
             label2.setForeground(Color.WHITE);
 
 
@@ -101,7 +103,7 @@ public class LoginContentPanel extends JPanel {
             textField.setAlignmentX(Component.CENTER_ALIGNMENT);
             textField.setBackground(new Color(0xF9F6EE));
             textField.setForeground(new Color(0x100D0D));
-            textField.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 16f));
+            textField.setFont(fontFactory.createFont("dunbartall_book", 16));
             textField.setPlaceholder(placeholder);
             return textField;
         }
@@ -112,7 +114,7 @@ public class LoginContentPanel extends JPanel {
             buttons.setAlignmentX(Component.CENTER_ALIGNMENT);
             buttons.setBackground(new Color(0x9D4EDD));
             buttons.setForeground(new Color(0xF9F6EE));
-            buttons.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 24f));
+            buttons.setFont(fontFactory.createFont("dunbartall_book", 24));
 
             buttons.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
@@ -174,7 +176,7 @@ public class LoginContentPanel extends JPanel {
     private JLabel createAccountLabel() {
         JLabel label = new JLabel("Don't have an account? Let's Create one!");
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        label.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 12f));
+        label.setFont(fontFactory.createFont("dunbartall_book", 12));
         label.setForeground(new Color(0x717171));
 
         // Hover + click behavior

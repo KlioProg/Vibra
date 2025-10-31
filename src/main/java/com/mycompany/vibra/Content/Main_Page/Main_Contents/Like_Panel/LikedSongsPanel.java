@@ -4,6 +4,9 @@
  */
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel;
 
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+
 import java.awt.*;
 import javax.swing.*;
 
@@ -14,6 +17,7 @@ import javax.swing.*;
 public class LikedSongsPanel extends JPanel {
 
     private JPanel songsListPanel;
+    FontFactory fontFactory = new DunbarFactory();
 
     public LikedSongsPanel() {
         setLayout(new BorderLayout());
@@ -21,7 +25,7 @@ public class LikedSongsPanel extends JPanel {
 
        
         JLabel header = new JLabel("Liked Songs");
-        header.setFont(new Font("Dunbar Tall", Font.BOLD, 60));
+        header.setFont(fontFactory.createFont("dunbartall_book", 60));
         header.setForeground(Color.WHITE);
         header.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         add(header, BorderLayout.NORTH);
@@ -118,14 +122,14 @@ public class LikedSongsPanel extends JPanel {
     private JLabel createHeaderLabel(String text, int align) {
         JLabel lbl = new JLabel(text, align);
         lbl.setForeground(new Color(138, 43, 226));
-        lbl.setFont(new Font("Dunbar Tall", Font.BOLD, 20));
+        lbl.setFont(fontFactory.createFont("dunbartall_book", 20));
         return lbl;
     }
 
     private JLabel createCellLabel(String text, Color color, boolean bold, int align) {
         JLabel lbl = new JLabel(text, align);
         lbl.setForeground(color);
-        lbl.setFont(new Font("Dunbar Tall", bold ? Font.BOLD : Font.PLAIN, 20));
+        lbl.setFont(fontFactory.createFont("dunbartall_book", 20));
         return lbl;
     }
 }

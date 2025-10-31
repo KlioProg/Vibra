@@ -1,5 +1,8 @@
 package com.mycompany.vibra.Factories.Common_UI;
 
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
+import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -10,6 +13,7 @@ import javax.swing.JButton;
 
 public class RoundedButtonFactory extends JButton {
     private int radius;
+    FontFactory fontFactory = new DunbarFactory();
 
     public RoundedButtonFactory(String text, int radius) {
         super(text);
@@ -20,7 +24,7 @@ public class RoundedButtonFactory extends JButton {
         setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); // padding
         setForeground(Color.WHITE);  // default text color
         setBackground(new Color(0x5A189A)); // default background
-        setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Book.ttf", 16f));
+        setFont(fontFactory.createFont("dunbartall_book", 16));
     }
 
     @Override
