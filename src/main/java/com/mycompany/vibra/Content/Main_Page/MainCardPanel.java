@@ -31,7 +31,9 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     private JLabel logoLabel;
     private JLabel musicLabel;
     private JLabel likedLabel;
-    private JLabel logoutLabel;
+    private JButton logoutButton;
+
+
 
     public MainCardPanel() {
         cardLayout = new CardLayout();
@@ -89,7 +91,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         sidebar.add(Box.createVerticalGlue());
 
 
-        JButton logoutButton = createLogoutButton();
+        logoutButton = createLogoutButton();
         logoutButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         sidebar.add(logoutButton);
 
@@ -142,15 +144,24 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     }
 
     private JButton createLogoutButton() {
-        ImageIcon logoutIcon = iconFactory.createIcon("logout");
-        ImageIcon logoutHoverIcon = iconFactory.createIcon("logout_hover");
-
         JButton logout = RoundedIconButtonFactory.createIconButton(
-                logoutIcon,
-                logoutHoverIcon,
+                iconFactory.createIcon("logout"),
+                iconFactory.createIcon("logout_hover"),
                 32,
                 "Logging out?"
         );
+
+        logout.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                logout.setIcon(iconFactory.createIcon("logout_hover"));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                logout.setIcon(iconFactory.createIcon("logout"));
+            }
+        });
 
         logout.addActionListener(e -> {
             JFrame mainFrame = (JFrame) SwingUtilities.getWindowAncestor(logout);
@@ -159,9 +170,9 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
             SwingUtilities.invokeLater(() -> Vibra.createMainFrame().setVisible(true));
         });
 
-
         return logout;
     }
+
 
 
 
@@ -174,6 +185,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         ImageIcon likedIcon = iconFactory.createIcon("heart");
         ImageIcon logoIcon = iconFactory.createIcon("vibra_logo");
         ImageIcon logoutIcon = iconFactory.createIcon("logout");
+        ImageIcon logoutHoverIcon = iconFactory.createIcon("logout_hover");
 
         // Sidebar background
         sidebar.setBackground(ThemeManager.getInstance().getSidebarColor());
@@ -183,9 +195,18 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         musicLabel.setIcon(musicIcon);
         likedLabel.setIcon(likedIcon);
 
+        // 🪄 Update the logout button
+        if (logoutButton != null) {
+            logoutButton.setIcon(logoutIcon);
+            logoutButton.setRolloverIcon(logoutHoverIcon);
+            logoutButton.repaint();
+        }
+
         revalidate();
         repaint();
     }
+
+
 
     @Override
     public void onThemeChanged(boolean isDarkMode) {
