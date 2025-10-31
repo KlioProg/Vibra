@@ -112,6 +112,13 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
         add(songDurationLabel);
     }
 
+    private String queueLoader(){
+
+        // TODO: Make a queue loader in order to be integrated in the TrackLoader and will be shown as a track not as a song only.
+        return "Queue";
+
+    }
+
     /**
      * Formats total seconds into a "M:SS" string.
      */

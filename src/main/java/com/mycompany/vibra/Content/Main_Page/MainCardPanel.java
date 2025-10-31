@@ -1,5 +1,7 @@
 package com.mycompany.vibra.Content.Main_Page;
 
+import com.mycompany.vibra.Content.Login_Panel.LoginContentPanel;
+import com.mycompany.vibra.Content.MainAppFrame;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPanel;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
@@ -7,7 +9,10 @@ import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkMod
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedIconButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
+import com.mycompany.vibra.Vibra;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,6 +31,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     private JLabel logoLabel;
     private JLabel musicLabel;
     private JLabel likedLabel;
+    private JLabel logoutLabel;
 
     public MainCardPanel() {
         cardLayout = new CardLayout();
@@ -59,18 +65,35 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         sidebar.setPreferredSize(new Dimension(100, getHeight()));
         sidebar.setBackground(ThemeManager.getInstance().getSidebarColor());
 
+        sidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         logoLabel = new JLabel(iconFactory.createIcon("vibra_logo"));
         logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         sidebar.add(Box.createVerticalStrut(20));
         sidebar.add(logoLabel);
 
-        sidebar.add(Box.createVerticalStrut(44));
+        sidebar.add(Box.createVerticalStrut(32));
         musicLabel = new JLabel(iconFactory.createIcon("music"));
-        sidebar.add(createSidebarIcon(musicLabel, "MusicPlayer", "music", "music_hover"));
+        JPanel musicPanel = createSidebarIcon(musicLabel, "MusicPlayer", "music", "music_hover");
+        musicPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sidebar.add(musicPanel);
 
         sidebar.add(Box.createVerticalStrut(24));
+
+
         likedLabel = new JLabel(iconFactory.createIcon("heart"));
-        sidebar.add(createSidebarIcon(likedLabel, "Liked", "heart", "heart_hover"));
+        JPanel likedPanel = createSidebarIcon(likedLabel, "Liked", "heart", "heart_hover");
+        likedPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sidebar.add(likedPanel);
+
+        sidebar.add(Box.createVerticalGlue());
+
+
+        JButton logoutButton = createLogoutButton();
+        logoutButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sidebar.add(logoutButton);
+
+        sidebar.add(Box.createVerticalStrut(36));
 
         add(sidebar, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -79,8 +102,9 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     }
 
 
+
     private JPanel createSidebarIcon(JLabel label, String cardKey, String iconType, String hoverIconType) {
-        RoundPadderFactory rounded = new RoundPadderFactory(12, 6, 6);
+        RoundPadderFactory rounded = new RoundPadderFactory(12, 15, 15);
         rounded.setLayout(new BorderLayout());
         rounded.add(label, BorderLayout.CENTER);
 
@@ -117,6 +141,28 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         return rounded;
     }
 
+    private JButton createLogoutButton() {
+        ImageIcon logoutIcon = iconFactory.createIcon("logout");
+        ImageIcon logoutHoverIcon = iconFactory.createIcon("logout_hover");
+
+        JButton logout = RoundedIconButtonFactory.createIconButton(
+                logoutIcon,
+                logoutHoverIcon,
+                32,
+                "Logging out?"
+        );
+
+        logout.addActionListener(e -> {
+            JFrame mainFrame = (JFrame) SwingUtilities.getWindowAncestor(logout);
+            mainFrame.dispose();
+
+            SwingUtilities.invokeLater(() -> Vibra.createMainFrame().setVisible(true));
+        });
+
+
+        return logout;
+    }
+
 
 
 
@@ -127,6 +173,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         ImageIcon musicIcon = iconFactory.createIcon("music");
         ImageIcon likedIcon = iconFactory.createIcon("heart");
         ImageIcon logoIcon = iconFactory.createIcon("vibra_logo");
+        ImageIcon logoutIcon = iconFactory.createIcon("logout");
 
         // Sidebar background
         sidebar.setBackground(ThemeManager.getInstance().getSidebarColor());

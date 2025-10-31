@@ -18,6 +18,8 @@ public class DarkModeIconFactory extends IconFactory {
             case "heart_hover" -> createIcon("/icons/heart_dark.png", 28, 28);
             case "music_hover" -> createIcon("/icons/music_dark.png", 28, 28);
             case "like_pressed" -> createIcon("/images/like_pressed.png", 28, 28);
+            case "logout" -> createIcon("/icons/Logout_white.png", 34,34);
+            case "logout_hover" -> createIcon("/icons/Logout_Hover.png", 34,34);
 
             default -> {
                 System.err.println("Unknown dark mode icon type: " + type);
