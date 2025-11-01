@@ -1,8 +1,6 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.*;
 import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -11,6 +9,7 @@ import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
@@ -24,7 +23,8 @@ import java.util.List;
 public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
     private final MusicPlayerPanel musicPlayerPanel;
-    private final TrackListPanel trackListPanel; // ✅ Reference to the list panel
+    private final TrackListPanel trackListPanel;
+    private JPanel playlistItemsContainer;
 
     // Keep refs so we can update them on theme change
     private JPanel libraryPanel;
@@ -32,7 +32,6 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private JLabel yourLibraryLabel;
     FontFactory fontFactory = new DunbarFactory();
 
-    // ✅ UPDATED CONSTRUCTOR
     public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel) {
         this.musicPlayerPanel = musicPlayerPanel;
         this.trackListPanel = trackListPanel; // Store the reference
@@ -47,33 +46,133 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 
     // Your UI code, unchanged
     private void initUI() {
+        // 1. This is the MAIN panel for this class
         libraryPanel = new JPanel();
-        libraryPanel.setLayout(new BoxLayout(libraryPanel, BoxLayout.Y_AXIS));
-        libraryPanel.setOpaque(true);
-        libraryPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 0, 0));
-        libraryPanel.setPreferredSize(new Dimension(402, Integer.MAX_VALUE));
+        libraryPanel.setLayout(new BorderLayout(0, 12)); // BorderLayout with 12px vertical gap
+        libraryPanel.setOpaque(false);
+        // Add padding to the main panel
+        libraryPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 0, 12));
+
+        // 2. Top Panel (Header) - Unchanged
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.setOpaque(false);
         topPanel.setAlignmentX(LEFT_ALIGNMENT);
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+
         albumLabel = new JLabel("Album");
-        albumLabel.setFont(fontFactory.createFont("dunbartall_bold", 32));
+//        albumLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 36));
+        albumLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
         topPanel.add(albumLabel);
         topPanel.add(Box.createHorizontalStrut(10));
         topPanel.add(createUploadButton());
         topPanel.add(Box.createHorizontalStrut(6));
         topPanel.add(createOpenFolderButton());
-        libraryPanel.add(topPanel);
-        libraryPanel.add(Box.createVerticalStrut(8));
+
+        // Add topPanel to the NORTH of libraryPanel
+        libraryPanel.add(topPanel, BorderLayout.NORTH);
+
+        // 3. This is your new container, just like 'trackListContainer'
+        playlistItemsContainer = new JPanel();
+        playlistItemsContainer.setLayout(new BoxLayout(playlistItemsContainer, BoxLayout.Y_AXIS));
+        playlistItemsContainer.setOpaque(false);
+
+        // 4. Add items to the scrollable container
         yourLibraryLabel = new JLabel("Your Library");
+//        yourLibraryLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 20f));
         yourLibraryLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
         yourLibraryLabel.setAlignmentX(LEFT_ALIGNMENT);
-        libraryPanel.add(yourLibraryLabel);
-        libraryPanel.add(Box.createVerticalStrut(12));
-        libraryPanel.add(createPlaylistButton());
-        add(libraryPanel, BorderLayout.WEST);
+        playlistItemsContainer.add(yourLibraryLabel);
+
+        playlistItemsContainer.add(Box.createVerticalStrut(12));
+        playlistItemsContainer.add(createPlaylistButton());
+
+        playlistItemsContainer.add(Box.createVerticalStrut(20));
+
+
+        JPanel item1 = createPlaylistItem(
+                new ImageIcon(getClass().getResource("/placeholders/car.png")),
+                "I'll be better for me.."
+        );
+        playlistItemsContainer.add(item1);
+        playlistItemsContainer.add(Box.createVerticalStrut(15));
+
+        JPanel item2 = createPlaylistItem(
+                new ImageIcon(getClass().getResource("/placeholders/cd.png")),
+                "best rnb playlist"
+        );
+        playlistItemsContainer.add(item2);
+        playlistItemsContainer.add(Box.createVerticalStrut(15));
+
+        JPanel item3 = createPlaylistItem(
+                new ImageIcon(getClass().getResource("/placeholders/lion.png")),
+                "OG Post Malone"
+        );
+        playlistItemsContainer.add(item3);
+        playlistItemsContainer.add(Box.createVerticalStrut(15));
+
+        JPanel item4 = createPlaylistItem(
+                new ImageIcon(getClass().getResource("/placeholders/dk.png")),
+                "Drake"
+        );
+        playlistItemsContainer.add(item4);
+
+        playlistItemsContainer.add(Box.createVerticalGlue());
+
+        JScrollPane scrollPane = new JScrollPane(playlistItemsContainer);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        libraryPanel.add(scrollPane, BorderLayout.CENTER);
+
+        add(libraryPanel, BorderLayout.CENTER);
     }
+
+    private JPanel createPlaylistItem(ImageIcon cover, String name) {
+        // Create the round padder container (acts as the background)
+        RoundPadderFactory itemPanel = new RoundPadderFactory(15, 5, 10);
+        itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.X_AXIS));
+        itemPanel.setOpaque(false);
+        itemPanel.setAlignmentX(LEFT_ALIGNMENT);
+        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        itemPanel.setBackground(new Color(0x53, 0x53, 0x53)); // Hover color: #535353
+
+        // Image (scaled)
+        Image scaledImg = cover.getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
+        JLabel artLabel = new JLabel(new ImageIcon(scaledImg));
+        artLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 12));
+
+        // Text
+        JLabel nameLabel = new JLabel(name);
+        nameLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
+        nameLabel.setForeground(Color.WHITE);
+        nameLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+
+        itemPanel.add(artLabel);
+        itemPanel.add(nameLabel);
+
+        // ✅ Hover effect: highlight background on mouse enter/exit
+        itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                itemPanel.setPaintBackground(true);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                itemPanel.setPaintBackground(false);
+            }
+        });
+
+        return itemPanel;
+    }
+
+
+
 
     // Your file extraction code, unchanged
     private Track extractTrackFromFile(File file) {
@@ -131,7 +230,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    // ✅ UPDATED Upload Button
+    // UPDATED Upload Button
     private RoundedButtonFactory createUploadButton() {
         RoundedButtonFactory button = createStyledButton("Upload");
 
@@ -154,12 +253,12 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 // Make sure we actually loaded tracks
                 if (!loadedTracks.isEmpty()) {
 
-                    // ✅ 1. This is your new code: It loads the list into the panel
+                    //It loads the list into the panel
                     if (trackListPanel != null) {
                         trackListPanel.loadTracksIntoPanel(loadedTracks);
                     }
 
-                    // ✅ 2. This is your old code: It plays the FIRST track
+                    // It plays the FIRST track
                     if (musicPlayerPanel != null) {
                         // We get the first track from the list we just made
                         musicPlayerPanel.loadTrack(loadedTracks.get(0));
@@ -171,7 +270,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    // ✅ UPDATED Open Folder Button
+    // Open Folder Button
     private RoundedButtonFactory createOpenFolderButton() {
         RoundedButtonFactory button = createStyledButton("Open Folder");
 
@@ -192,7 +291,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                         if (track != null) tracks.add(track);
                     }
 
-                    // ✅ Send the new list to the TrackListPanel
+                    // Send the new list to the TrackListPanel
                     if (!tracks.isEmpty() && trackListPanel != null) {
                         trackListPanel.loadTracksIntoPanel(tracks);
                     }
