@@ -26,6 +26,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     private JPanel sidebar;
     private IconFactory iconFactory;
     private IconFactory themeFactory;
+    private LikedPanel likedPanelInstance; //adding this for the heart button integration
 
     // Keep references to sidebar icons for theme changes
     private JLabel logoLabel;
@@ -59,8 +60,12 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         boolean isDark = ThemeManager.getInstance().isDarkMode();
         iconFactory = isDark ? new DarkModeIconFactory() : new LightModeIconFactory();
 
-        contentPanel.add(new MusicPanel(iconFactory), "MusicPlayer");
-        contentPanel.add(new LikedPanel(), "Liked");
+        //integration of liked button to liked panel
+        this.likedPanelInstance = new LikedPanel();
+        
+        contentPanel.add(new MusicPanel(iconFactory, likedPanelInstance), "MusicPlayer");
+        contentPanel.add(likedPanelInstance, "Liked");
+//        contentPanel.add(new LikedPanel(), "Liked");
 
         sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));

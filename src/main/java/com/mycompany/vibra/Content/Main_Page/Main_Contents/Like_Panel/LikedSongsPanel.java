@@ -17,6 +17,7 @@ import javax.swing.*;
 public class LikedSongsPanel extends JPanel {
 
     private JPanel songsListPanel;
+    
     FontFactory fontFactory = new DunbarFactory();
 
     public LikedSongsPanel() {
