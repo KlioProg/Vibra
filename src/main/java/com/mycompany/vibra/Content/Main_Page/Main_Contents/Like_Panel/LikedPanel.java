@@ -40,11 +40,14 @@ public class LikedPanel extends JPanel {
     private JPanel emptyStateContent;
     private JPanel darkBackdrop;
     private List<Song> displaySongs;
-    
+
     private static final List<Song> MOCK_SONGS = Arrays.asList(
-    new Song("Pasilyo", "Sunkissed Lola", "4:30"),// song placeholder
-    new Song("Unang Tingin", "Samuel Timothy", "4:30"),// song placeholder
-    new Song("She's not into you pare", "Friends Came Over", "3:49")// song placeholder
+            new Song("Pasilyo", "Sunkissed Lola", "4:30",
+                    new ImageIcon(LikedPanel.class.getResource("/placeholders/pasilyo.jpg")).getImage()),
+            new Song("Unang Tingin", "Samuel Timothy", "4:30",
+                    new ImageIcon(LikedPanel.class.getResource("/placeholders/unang tingin.jpg")).getImage()),
+            new Song("She's not into you pare", "Friends Came Over", "3:49",
+                    new ImageIcon(LikedPanel.class.getResource("/placeholders/she's just not that into you pare.jpg")).getImage())
     );
     
     public LikedPanel() {
@@ -55,7 +58,7 @@ public class LikedPanel extends JPanel {
     }
     
     private void initializeUI() {
-        setPreferredSize(new Dimension(1039, 1093));
+//        setPreferredSize(new Dimension(1039, 1093));
         setLayout(new BorderLayout());
         
         // Main container
@@ -420,29 +423,38 @@ public class LikedPanel extends JPanel {
         }
         
         private JPanel createAlbumArt() {
+                Image artImage = song.getAlbumArt();
+                int size = 40;
             JPanel art = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
                     Graphics2D g2d = (Graphics2D) g.create();
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    
-                    int size = 40;
-                    GradientPaint gradient = new GradientPaint(
-                        0, 0, new Color(168, 85, 247),
-                        size, size, new Color(139, 92, 246)
-                    );
-                    g2d.setPaint(gradient);
-                    g2d.fill(new Ellipse2D.Float(0, 0, size, size));
-                    
-                    g2d.setColor(TEXT_WHITE);
-                    g2d.setFont(new Font("Serif", Font.BOLD, 20));
-                    g2d.drawString("♪", 12, 28);
-                    
+
+                    // Clip to a circle
+                    g2d.setClip(new Ellipse2D.Float(0, 0, size, size));
+
+                    if (artImage != null) {
+                        // Draw the album art, scaled to fill the circle
+                        g2d.drawImage(artImage, 0, 0, size, size, this);
+                    } else {
+                        // Draw the default placeholder (purple circle with note)
+                        GradientPaint gradient = new GradientPaint(
+                                0, 0, new Color(168, 85, 247),
+                                size, size, new Color(139, 92, 246)
+                        );
+                        g2d.setPaint(gradient);
+                        g2d.fill(new Ellipse2D.Float(0, 0, size, size));
+
+                        g2d.setColor(TEXT_WHITE);
+                        g2d.setFont(new Font("Serif", Font.BOLD, 20));
+                        g2d.drawString("♪", 12, 28);
+                    }
                     g2d.dispose();
                 }
             };
             art.setOpaque(false);
-            art.setPreferredSize(new Dimension(40, 40));
+            art.setPreferredSize(new Dimension(size, size));
             return art;
         }
         
@@ -571,16 +583,19 @@ public class LikedPanel extends JPanel {
         private String title;
         private String artist;
         private String duration;
+        private Image albumArt;
         
-        public Song(String title, String artist, String duration) {
+        public Song(String title, String artist, String duration, Image albumArt) {
             this.title = title;
             this.artist = artist;
             this.duration = duration;
+            this.albumArt = null;
         }
         
         public String getTitle() { return title; }
         public String getArtist() { return artist; }
         public String getDuration() { return duration; }
+        public Image getAlbumArt() { return albumArt; }
         // ADDED: equals/hashCode for List.contains check to work correctly
         @Override
         public boolean equals(Object o) {

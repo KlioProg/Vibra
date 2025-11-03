@@ -302,9 +302,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
                 String title = currentTrack.getTitle();
                 String artist = currentTrack.getArtist();
                 String duration = Mp3Utils.formatMinutes((int) currentTrack.getDurationMs());
+                Image art = currentTrack.getAlbumArtImage();
 
                 // Create a new "LikedPanel.Song" object
-                LikedPanel.Song songToAdd = new LikedPanel.Song(title, artist, duration);
+                LikedPanel.Song songToAdd = new LikedPanel.Song(title, artist, duration, art);
 
                 // Add it to the LikedPanel
                 likedPanel.addSong(songToAdd);
