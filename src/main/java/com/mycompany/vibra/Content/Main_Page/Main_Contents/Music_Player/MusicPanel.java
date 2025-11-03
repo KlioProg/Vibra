@@ -1,5 +1,6 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player;
 
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
@@ -17,10 +18,11 @@ public class MusicPanel extends JPanel {
     private TrackListPanel trackListPanel;
     private MainLibraryPanel mainLibraryPanel;
     private Playlist mainPlaylist;
+    private LikedPanel likedPanel;
 
-
-    public MusicPanel(IconFactory iconFactory) {
+    public MusicPanel(IconFactory iconFactory, LikedPanel likedPanel) {
         setLayout(new BorderLayout());
+        this.likedPanel = likedPanel;
 
         // ✅ 1. Create the ONE shared AudioPlayer
         audioPlayer = new AudioPlayer();
@@ -33,7 +35,7 @@ public class MusicPanel extends JPanel {
         add(trackListPanel, BorderLayout.WEST);
 
         // ✅ 3. Create the MusicPlayerPanel and GIVE it the player
-        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist);
+        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanel);
         
         // Left: Track list
         TrackListPanel trackListPanel = new TrackListPanel(audioPlayer);
@@ -41,7 +43,7 @@ public class MusicPanel extends JPanel {
         add(trackListPanel, BorderLayout.WEST);
 
         // Center: Music player panel (share AudioPlayer ✅)
-        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist);
+        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanel);
         musicPlayerPanel.setPreferredSize(new Dimension(610, 0));
         add(musicPlayerPanel, BorderLayout.CENTER);
 

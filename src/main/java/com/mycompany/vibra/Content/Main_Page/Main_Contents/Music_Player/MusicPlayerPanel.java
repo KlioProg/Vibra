@@ -15,6 +15,7 @@ import com.mycompany.vibra.Factories.Music_UI.CustomSliderUI;
 import com.mycompany.vibra.model.Playlist; //playlist import
 import com.mycompany.vibra.model.Observer; //observer import 
 import com.mycompany.vibra.model.TrackIterator; //iterator import 
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel; // ADD THIS IMPORT
 
 
 import javax.swing.*;
@@ -24,6 +25,7 @@ import javax.swing.plaf.basic.BasicSliderUI;
 import java.awt.*;
 
 import static com.mycompany.vibra.Factories.Common_UI.HoverPopUpMessageFactory.attachHoverPopup;
+import com.mycompany.vibra.musicUtilities.Mp3Utils;
 import static com.mycompany.vibra.musicUtilities.Mp3Utils.formatMinutes;
 
 public class MusicPlayerPanel extends JPanel implements Observer{
@@ -57,9 +59,11 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
     // we only keep references, icons come from factory
     private ImageIcon playIcon, pauseIcon, heartIcon, likedIcon, defaultCover, themeButton;
+    private final LikedPanel likedPanel;
 
-    public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist) {
+    public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist, LikedPanel likedPanel) {
         this.audioPlayer = audioPlayer;
+        this.likedPanel = likedPanel; // Store the reference       
         this.icons = new ButtonIconFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
 
@@ -285,9 +289,29 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 //            }
 //        });
 
-        likeButton.addActionListener(e -> {
+        //--liked button listener logic
+       likeButton.addActionListener(e -> {
+            if (currentTrack == null) return; // Do nothing if no song is playing
+
+            //  Toggle the button's visual state
             isLiked = !isLiked;
             likeButton.setIcon(isLiked ? likedIcon : heartIcon);
+
+            if (isLiked) {
+                //  Get metadata from the current track
+                String title = currentTrack.getTitle();
+                String artist = currentTrack.getArtist();
+                String duration = Mp3Utils.formatMinutes((int) currentTrack.getDurationMs());
+
+                // Create a new "LikedPanel.Song" object
+                LikedPanel.Song songToAdd = new LikedPanel.Song(title, artist, duration);
+
+                // Add it to the LikedPanel
+                likedPanel.addSong(songToAdd);
+            } else {
+                // Find the song and remove it
+                // We can implement this next
+            }
         });
 
         volumeSlider.addChangeListener(e -> {

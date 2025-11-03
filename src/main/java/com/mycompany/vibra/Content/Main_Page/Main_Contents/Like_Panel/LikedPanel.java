@@ -1,6 +1,8 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel;
+
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -11,13 +13,14 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 /**
  *
  * @author robbiebelen
  */
 public class LikedPanel extends JPanel {
     
-    // === DESIGN SYSTEM  ===
+    //DESIGN SYSTEM 
     private static final Color GRADIENT_COLOR_1 = new Color(157, 78, 221);  // #9D4EDD
     private static final Color GRADIENT_COLOR_2 = new Color(87, 0, 255);    // #5700FF
     private static final Color GRADIENT_COLOR_3 = new Color(157, 78, 221);  // #9D4EDD
@@ -29,19 +32,23 @@ public class LikedPanel extends JPanel {
     private static final Color TEXT_GRAY = new Color(169, 169, 169);    // Light gray
     private static final Color TEXT_PURPLE = new Color(168, 85, 247);      // #A855F7
     private static final Color BORDER_SUBTLE = new Color(255, 255, 255, 25);
-
+    
+    private FontFactory fontFactory;
     
     // UI Components
     private JPanel songListContainer;
     private JPanel emptyStateContent;
     private JPanel darkBackdrop;
     private List<Song> displaySongs;
-    FontFactory fontFactory = new DunbarFactory();
     
-    // REMOVED fontLoader field
-
+    private static final List<Song> MOCK_SONGS = Arrays.asList(
+    new Song("Pasilyo", "Sunkissed Lola", "4:30"),// song placeholder
+    new Song("Unang Tingin", "Samuel Timothy", "4:30"),// song placeholder
+    new Song("She's not into you pare", "Friends Came Over", "3:49")// song placeholder
+    );
+    
     public LikedPanel() {
-        // REMOVED fontLoader constructor
+        this.fontFactory = new DunbarFactory();
         this.displaySongs = new ArrayList<>();
         initializeUI();
         updateContentState();
@@ -133,10 +140,42 @@ public class LikedPanel extends JPanel {
         
         mainContainer.add(darkBackdrop, BorderLayout.CENTER);
         
+        //footer placeholder button container
+        mainContainer.add(buildFooter(), BorderLayout.SOUTH);
         // Add main container to this panel
         add(mainContainer, BorderLayout.CENTER);
     }
     
+    private JPanel buildFooter() {
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        footerPanel.setOpaque(false);
+        footerPanel.setBorder(new EmptyBorder(20, 0, 0, 0)); // Space above buttons
+
+        // Button 1: Add 5 Songs (Using RoundedButtonFactory)
+        RoundedButtonFactory addBtn = new RoundedButtonFactory("Add 5 Songs", 10);
+        addBtn.setFont(fontFactory.createFont("dunbartall_bold", 15)); // Use factory
+        addBtn.setForeground(Color.WHITE);
+        addBtn.setBackground(new Color(0x9D4EDD)); // Accent Color
+        addBtn.setFocusPainted(false);
+        addBtn.addActionListener(e -> {
+            MOCK_SONGS.forEach(this::addSong);
+        });
+
+        // Button 2: Clear Songs (Using RoundedButtonFactory)
+        RoundedButtonFactory clearBtn = new RoundedButtonFactory("Clear All Songs", 10);
+        clearBtn.setFont(fontFactory.createFont("dunbartall_bold", 15)); // Use factory
+        clearBtn.setForeground(Color.BLACK);
+        clearBtn.setBackground(Color.LIGHT_GRAY); 
+        clearBtn.setFocusPainted(false);
+        clearBtn.addActionListener(e -> {
+            clearAll();
+        });
+
+        footerPanel.add(addBtn);
+        footerPanel.add(clearBtn);
+
+        return footerPanel;
+    }
     // THIS IS THE GRADIENT CODE, KEPT SAFELY INSIDE LIKEDPANEL
     @Override
     protected void paintComponent(Graphics g) {
@@ -182,7 +221,7 @@ public class LikedPanel extends JPanel {
         bugPlaceholder.setHorizontalAlignment(SwingConstants.CENTER);
         emptyPanel.add(bugPlaceholder, gbc);
         
-        // Empty message - Poppins SemiBold
+        // Empty message - Dunbar SemiBold
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
         JLabel emptyMessage = new JLabel("Crickets..* tap that heart and add some bangers!");
@@ -224,7 +263,7 @@ public class LikedPanel extends JPanel {
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        // Title - Poppins SemiBold
+        // Title - dunbar SemiBold
         gbc.gridx = 0;
         gbc.weightx = 0.4;
         gbc.anchor = GridBagConstraints.WEST;
@@ -234,7 +273,7 @@ public class LikedPanel extends JPanel {
         titleLabel.setForeground(TEXT_PURPLE);
         headerContent.add(titleLabel, gbc);
         
-        // Artist - Poppins SemiBold
+        // Artist - dunbar SemiBold
         gbc.gridx = 1;
         gbc.weightx = 0.4;
         JLabel artistLabel = new JLabel("Artist");
@@ -243,7 +282,7 @@ public class LikedPanel extends JPanel {
         artistLabel.setForeground(TEXT_PURPLE);
         headerContent.add(artistLabel, gbc);
         
-        // Duration - Poppins SemiBold
+        // Duration - dunbar SemiBold
         gbc.gridx = 2;
         gbc.weightx = 0.2;
         gbc.anchor = GridBagConstraints.EAST;
@@ -257,9 +296,7 @@ public class LikedPanel extends JPanel {
         return header;
     }
     
-    /**
-     * Style scrollbar to match dark theme
-     */
+    
     private void styleScrollBar(JScrollBar scrollBar) {
         scrollBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
             @Override
@@ -330,7 +367,7 @@ public class LikedPanel extends JPanel {
             JPanel albumArt = createAlbumArt();
             contentPanel.add(albumArt, gbc);
             
-            // Song title - Poppins SemiBold
+            // Song title - Dunbar SemiBold
             gbc.gridx = 1;
             gbc.weightx = 0.4;
             JLabel titleLabel = new JLabel(song.getTitle());
@@ -339,7 +376,7 @@ public class LikedPanel extends JPanel {
             titleLabel.setForeground(TEXT_WHITE);
             contentPanel.add(titleLabel, gbc);
             
-            // Artist name - Poppins SemiBold
+            // Artist name - Dunbar SemiBold
             gbc.gridx = 2;
             gbc.weightx = 0.4;
             JLabel artistLabel = new JLabel(song.getArtist());
@@ -348,7 +385,7 @@ public class LikedPanel extends JPanel {
             artistLabel.setForeground(TEXT_GRAY);
             contentPanel.add(artistLabel, gbc);
             
-            // Duration - Poppins SemiBold
+            // Duration - Dunbar SemiBold
             gbc.gridx = 3;
             gbc.weightx = 0.15;
             gbc.anchor = GridBagConstraints.EAST;
@@ -485,9 +522,7 @@ public class LikedPanel extends JPanel {
         updateContentState();
     }
     
-    /**
-     * Update content inside the dark backdrop (switch between empty state and song list)
-     */
+    // Update content inside the dark backdrop (switch between empty state and song list)
     private void updateContentState() {
         // Get the CardLayout from the content area
         Component[] components = darkBackdrop.getComponents();
@@ -546,6 +581,38 @@ public class LikedPanel extends JPanel {
         public String getTitle() { return title; }
         public String getArtist() { return artist; }
         public String getDuration() { return duration; }
+        // ADDED: equals/hashCode for List.contains check to work correctly
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Song song = (Song) o;
+            return title.equals(song.title) && artist.equals(song.artist);
+        }
+        
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(title, artist);
+       }
     }
+    
+    // === DEMO ===
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Liked Songs Panel");
+           frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            
+           // Create panel
+            LikedPanel panel = new LikedPanel();
+            
+            frame.add(panel, BorderLayout.CENTER);
+            frame.setSize(1100, 1150);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
+    
 }
 
+    
