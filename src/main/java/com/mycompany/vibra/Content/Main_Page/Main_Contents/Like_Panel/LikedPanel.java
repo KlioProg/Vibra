@@ -41,14 +41,14 @@ public class LikedPanel extends JPanel {
     private JPanel darkBackdrop;
     private List<Song> displaySongs;
 
-    private static final List<Song> MOCK_SONGS = Arrays.asList(
-            new Song("Pasilyo", "Sunkissed Lola", "4:30",
-                    new ImageIcon(LikedPanel.class.getResource("/placeholders/pasilyo.jpg")).getImage()),
-            new Song("Unang Tingin", "Samuel Timothy", "4:30",
-                    new ImageIcon(LikedPanel.class.getResource("/placeholders/unang tingin.jpg")).getImage()),
-            new Song("She's not into you pare", "Friends Came Over", "3:49",
-                    new ImageIcon(LikedPanel.class.getResource("/placeholders/she's just not that into you pare.jpg")).getImage())
-    );
+    // private static final List<Song> MOCK_SONGS = Arrays.asList(
+    //         new Song("Pasilyo", "Sunkissed Lola", "4:30",
+    //                 new ImageIcon(LikedPanel.class.getResource("/placeholders/pasilyo.jpg")).getImage()),
+    //         new Song("Unang Tingin", "Samuel Timothy", "4:30",
+    //                 new ImageIcon(LikedPanel.class.getResource("/placeholders/unang tingin.jpg")).getImage()),
+    //         new Song("She's not into you pare", "Friends Came Over", "3:49",
+    //                 new ImageIcon(LikedPanel.class.getResource("/placeholders/she's just not that into you pare.jpg")).getImage())
+    // );
     
     public LikedPanel() {
         this.fontFactory = new DunbarFactory();
@@ -155,14 +155,14 @@ public class LikedPanel extends JPanel {
         footerPanel.setBorder(new EmptyBorder(20, 0, 0, 0)); // Space above buttons
 
         // Button 1: Add 5 Songs (Using RoundedButtonFactory)
-        RoundedButtonFactory addBtn = new RoundedButtonFactory("Add 5 Songs", 10);
-        addBtn.setFont(fontFactory.createFont("dunbartall_bold", 15)); // Use factory
-        addBtn.setForeground(Color.WHITE);
-        addBtn.setBackground(new Color(0x9D4EDD)); // Accent Color
-        addBtn.setFocusPainted(false);
-        addBtn.addActionListener(e -> {
-            MOCK_SONGS.forEach(this::addSong);
-        });
+        // RoundedButtonFactory addBtn = new RoundedButtonFactory("Add 5 Songs", 10);
+        // addBtn.setFont(fontFactory.createFont("dunbartall_bold", 15)); // Use factory
+        // addBtn.setForeground(Color.WHITE);
+        // addBtn.setBackground(new Color(0x9D4EDD)); // Accent Color
+        // addBtn.setFocusPainted(false);
+        // addBtn.addActionListener(e -> {
+        //     MOCK_SONGS.forEach(this::addSong);
+        // });
 
         // Button 2: Clear Songs (Using RoundedButtonFactory)
         RoundedButtonFactory clearBtn = new RoundedButtonFactory("Clear All Songs", 10);
@@ -174,7 +174,7 @@ public class LikedPanel extends JPanel {
             clearAll();
         });
 
-        footerPanel.add(addBtn);
+        // footerPanel.add(addBtn);
         footerPanel.add(clearBtn);
 
         return footerPanel;
