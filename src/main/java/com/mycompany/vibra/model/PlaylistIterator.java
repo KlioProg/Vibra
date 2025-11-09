@@ -3,17 +3,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.mycompany.vibra.model;
-import com.mycompany.vibra.musicUtilities.Track;
 import java.util.List;
 /**
  *
  * @author robbiebelen
  */
 public class PlaylistIterator implements TrackIterator{
-    
+
     private List<Track> tracks;
     private int position = 0; //keeps track of current position in the list
-    
+
     public PlaylistIterator(Playlist playlist){
         this.tracks = playlist.getTracks();
     }

@@ -19,6 +19,7 @@ public class ButtonIconFactory extends IconFactory {
             case "liked" -> createIcon("/images/like_button.png", 28, 28);
             case "dark" -> createIcon("/images/darkMode.png", 28, 28);
             case "light" -> createIcon("/images/lightMode.png", 28, 28);
+            case "playlist_default" -> createIcon("/images/default_cover.png", 190, 190);
             // Defaults Hover
             case "liked_pressed" -> createIcon("/images/like_pressed.png", 28, 27);
 

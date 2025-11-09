@@ -1,5 +1,6 @@
 package com.mycompany.vibra.musicUtilities;
 
+import com.mycompany.vibra.model.Track;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
 import java.io.File;

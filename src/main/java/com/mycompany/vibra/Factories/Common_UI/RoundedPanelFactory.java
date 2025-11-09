@@ -10,16 +10,6 @@ public class RoundedPanelFactory extends JPanel {
     private Color borderColor;
     private int borderThickness;
 
-    /**
-     * Creates a rounded panel with optional border and optional fixed size (no shadows).
-     *
-     * @param cornerRadius    radius of the corners
-     * @param backgroundColor background color
-     * @param borderColor     border color (null = no border)
-     * @param borderThickness border width in pixels (0 = no border)
-     * @param preferredWidth  set preferred width (0 to ignore)
-     * @param preferredHeight set preferred height (0 to ignore)
-     */
     public RoundedPanelFactory(
             int cornerRadius,
             Color backgroundColor,
@@ -34,7 +24,7 @@ public class RoundedPanelFactory extends JPanel {
         this.borderThickness = borderThickness;
 
         setOpaque(false);
-        setLayout(new GridBagLayout()); // supports icon + text
+        // setLayout(new GridBagLayout()); // 👈 FIX #1: REMOVE THIS LINE
 
         // --- Optional fixed size ---
         if (preferredWidth > 0 && preferredHeight > 0) {
@@ -50,6 +40,16 @@ public class RoundedPanelFactory extends JPanel {
         this(cornerRadius, bg, border, borderThickness, 0, 0);
     }
 
+    // 👇 FIX #2: ADD THIS METHOD TO ALLOW HOVER COLOR
+    public void setBackgroundColor(Color backgroundColor) {
+        this.backgroundColor = backgroundColor;
+        repaint(); // Tell the panel to repaint with the new color
+    }
+
+    public Color getBackgroundColor() {
+        return this.backgroundColor;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -62,7 +62,8 @@ public class RoundedPanelFactory extends JPanel {
 
         // Draw background
         g2.setColor(backgroundColor);
-        g2.fillRoundRect(0, 0, width - 1, height - 1, cornerRadius, cornerRadius);
+        // 👇 FIX #3: REMOVE THE -1 TO FIX THE 1-PIXEL BORDER
+        g2.fillRoundRect(0, 0, width, height, cornerRadius, cornerRadius);
 
         // Draw border
         if (borderColor != null && borderThickness > 0) {
@@ -81,9 +82,6 @@ public class RoundedPanelFactory extends JPanel {
         g2.dispose();
     }
 
-    /**
-     * Adds an icon + text to the panel, side by side.
-     */
     public void addIconWithText(ImageIcon icon, String text, Font font, Color color) {
         JLabel iconLabel = new JLabel(icon);
         JLabel textLabel = new JLabel("<html>" + text + "</html>");
@@ -103,7 +101,6 @@ public class RoundedPanelFactory extends JPanel {
         add(textLabel, gbc);
     }
 
-    // --- Convenience creators ---
     public static RoundedPanelFactory createErrorPanel(ImageIcon errorIcon, String message, Font font) {
         RoundedPanelFactory panel = new RoundedPanelFactory(
                 16, new Color(0xC1121F), new Color(0xC1121F), 1,

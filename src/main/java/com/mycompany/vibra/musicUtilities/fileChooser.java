@@ -1,5 +1,7 @@
 package com.mycompany.vibra.musicUtilities;
 
+import com.mycompany.vibra.model.Track;
+
 import javax.swing.*;
 import java.io.File;
 import java.util.List;
