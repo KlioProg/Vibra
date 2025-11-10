@@ -17,10 +17,13 @@ import com.mycompany.vibra.model.Observer; //observer import
 import com.mycompany.vibra.model.TrackIterator; //iterator import 
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel; // ADD THIS IMPORT
 
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicSliderUI;
+import com.mycompany.vibra.dao.LikedSongsDao;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.awt.*;
 
@@ -32,7 +35,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
     private final AudioPlayer audioPlayer;
     private final IconFactory icons;
+    private final int currentUserID;
     private IconFactory themeIcons;
+    private final LikedSongsDao likedSongsDao;
+    private List<Track> likedTracksList;
 
     private JLabel trackTitleLabel;
     private JLabel trackArtistLabel;
@@ -61,10 +67,15 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     private ImageIcon playIcon, pauseIcon, heartIcon, likedIcon, defaultCover, themeButton;
     private final LikedPanel likedPanel;
 
-    public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist, LikedPanel likedPanel) {
+    public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist, LikedPanel likedPanel, int userId) {
         this.audioPlayer = audioPlayer;
-        this.likedPanel = likedPanel; // Store the reference       
+        this.likedPanel = likedPanel; // Store the reference  
+        this.currentUserID = userId;     
+        this.likedSongsDao = new LikedSongsDao();
         this.icons = new ButtonIconFactory();
+
+        loadLikedTracksCache();
+
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
 
          //for the observer
@@ -80,6 +91,20 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         initUI();
         initTimer();
         applyTheme(ThemeManager.getInstance().isDarkMode());
+    }
+
+    private void loadLikedTracksCache() {
+        // Loads all liked songs into a list for fast checking
+        try {
+            this.likedTracksList = likedSongsDao.listLikedByUser(currentUserID);
+            
+            // Also, tell the LikedPanel to update its UI
+            likedPanel.setSongs(this.likedTracksList); 
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Failed to load liked songs
+        }
     }
 
     private void initUI() {
@@ -291,27 +316,38 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
         //--liked button listener logic
        likeButton.addActionListener(e -> {
-            if (currentTrack == null) return; // Do nothing if no song is playing
-
-            //  Toggle the button's visual state
-            isLiked = !isLiked;
-            likeButton.setIcon(isLiked ? likedIcon : heartIcon);
-
-            if (isLiked) {
-                //  Get metadata from the current track
-                String title = currentTrack.getTitle();
-                String artist = currentTrack.getArtist();
-                String duration = Mp3Utils.formatMinutes((int) currentTrack.getDurationMs());
-                Image art = currentTrack.getAlbumArtImage();
-
-                // Create a new "LikedPanel.Song" object
-                LikedPanel.Song songToAdd = new LikedPanel.Song(title, artist, duration, art);
-
-                // Add it to the LikedPanel
-                likedPanel.addSong(songToAdd);
-            } else {
-                // Find the song and remove it
-                // We can implement this next
+            if (currentTrack == null || currentTrack.getId() == -1) {
+                // Can't like a track that isn't in the database
+                return; 
+            }
+    
+            // We check the *cache*, not the 'isLiked' boolean
+            boolean currentlyLiked = isTrackInCache(currentTrack);
+            
+            try {
+                if (currentlyLiked) {
+                    // --- UNLIKE IT ---
+                    likedSongsDao.unlike(currentUserID, currentTrack.getId());
+                    
+                    // Remove from cache and UI
+                    likedTracksList.removeIf(t -> t.getId() == currentTrack.getId());
+                    likedPanel.removeSong(currentTrack);
+                    likeButton.setIcon(heartIcon);
+                    isLiked = false; // Update the state
+                    
+                } else {
+                    // --- LIKE IT ---
+                    likedSongsDao.like(currentUserID, currentTrack.getId());
+                    
+                    // Add to cache and UI
+                    likedTracksList.add(currentTrack);
+                    likedPanel.addSong(currentTrack);
+                    likeButton.setIcon(likedIcon);
+                    isLiked = true; // Update the state
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                // Database failed, do nothing
             }
         });
 
@@ -430,8 +466,13 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         repaint();
     }
 
-
-
+    // --- ADD THIS NEW HELPER METHOD ---
+    private boolean isTrackInCache(Track track) {
+        if (track == null || track.getId() == -1) return false;
+        
+        // Check if any track in our list has the same ID
+        return likedTracksList.stream().anyMatch(t -> t.getId() == track.getId());
+    }
 
     // REPLACE your loadTrack method with this:
     public void loadTrack(Track track) {
@@ -439,45 +480,43 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         trackTitleLabel.setText(track.getTitle());
         trackArtistLabel.setText(track.getArtist());
 
-        // Update album art (using your Track class!)
         Image albumArt = track.getAlbumArtImage();
         if (albumArt != null) {
             albumArtLabel.setIcon(new ImageIcon(
-                    albumArt.getScaledInstance(265, 265, Image.SCALE_SMOOTH) // Use 300x300
+                    albumArt.getScaledInstance(265, 265, Image.SCALE_SMOOTH)
             ));
         } else {
             albumArtLabel.setIcon(defaultCover);
         }
 
-        // Stop current playback and reset UI
-        audioPlayer.stop(); // Full stop and reset
+        audioPlayer.stop(); 
         progressTimer.stop();
 
         currentTimeLabel.setText("0:00");
         totalTimeLabel.setText(formatMinutes((int) track.getDurationMs()));
         progressSlider.setValue(0);
         
-        // Set volume from the slider (in case it changed)
         float value = volumeSlider.getValue() / 100f;
         audioPlayer.setVolume(value);
 
-        // Play the new track
         audioPlayer.play(track);
         progressTimer.start();
         playPauseButton.setIcon(pauseIcon);
         isPlaying = true;
-        isLiked = false;
-        likeButton.setIcon(heartIcon);
 
+        // --- NEW LIKED-STATUS CHECK ---
+        // Check our fast cache instead of the DB
+        if (isTrackInCache(currentTrack)) {
+            isLiked = true;
+            likeButton.setIcon(likedIcon);
+        } else {
+            isLiked = false;
+            likeButton.setIcon(heartIcon);
+        }
+        // --- END NEW CHECK ---
+        
         revalidate();
         repaint();
-
-//        // --- Automatically play the new track ---
-//        // (You can comment this out if you don't want auto-play)
-//        audioPlayer.play(currentTrack);
-//        progressTimer.start();
-//        playPauseButton.setIcon(playIcon); // Show PAUSE icon
-//        isPlaying = true;
     }
 
     @Override //for update method

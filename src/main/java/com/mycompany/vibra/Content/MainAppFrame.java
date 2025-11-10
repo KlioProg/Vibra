@@ -9,10 +9,14 @@ public class MainAppFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
 
-    public MainAppFrame(){
+    public MainAppFrame(int userID){
         initializeFrame();
-        setupUi();
+        setupUi(userID);
         setVisible(true);
+    }
+
+    public MainAppFrame() {
+        this(0);
     }
 
     private void initializeFrame(){
@@ -27,8 +31,8 @@ public class MainAppFrame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private void setupUi(){
-        this.setContentPane(new MainCardPanel());
+    private void setupUi(int userID){
+        this.setContentPane(new MainCardPanel(userID));
     }
 
 
@@ -38,7 +42,3 @@ public class MainAppFrame extends JFrame {
 
 
 }
-
-
-
-
