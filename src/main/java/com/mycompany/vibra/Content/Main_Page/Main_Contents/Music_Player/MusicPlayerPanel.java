@@ -10,7 +10,6 @@ import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightMo
 import com.mycompany.vibra.Factories.ThemeFactory.DarkModeToggle;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
-import com.mycompany.vibra.model.Track;
 import com.mycompany.vibra.Factories.Music_UI.CustomSliderUI;
 import com.mycompany.vibra.model.Playlist; //playlist import
 import com.mycompany.vibra.model.Observer; //observer import 
@@ -28,6 +27,8 @@ import java.util.stream.Collectors;
 import java.awt.*;
 
 import com.mycompany.vibra.musicUtilities.Mp3Utils;
+import com.mycompany.vibra.musicUtilities.Track;
+
 import static com.mycompany.vibra.musicUtilities.Mp3Utils.formatMinutes;
 
 public class MusicPlayerPanel extends JPanel implements Observer{

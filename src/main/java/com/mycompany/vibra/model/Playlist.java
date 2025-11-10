@@ -3,6 +3,8 @@ package com.mycompany.vibra.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mycompany.vibra.musicUtilities.Track;
+
 public class Playlist implements Subject {
     private final int playlist_id;
     private final int user_id;
