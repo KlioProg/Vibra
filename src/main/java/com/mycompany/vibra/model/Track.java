@@ -1,4 +1,4 @@
-package com.mycompany.vibra.musicUtilities;
+package com.mycompany.vibra.model;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;

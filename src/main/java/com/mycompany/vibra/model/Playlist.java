@@ -1,7 +1,5 @@
 package com.mycompany.vibra.model;
 
-import com.mycompany.vibra.musicUtilities.Track;
-import com.mycompany.vibra.model.TrackIterator;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +10,7 @@ public class Playlist implements Subject {
     private List<Track> tracks = new ArrayList<>();
     private int currentTrackIndex = -1;
     private List<Observer> observers = new ArrayList<>();
-  
+
     public Playlist(int playlist_id, String text, int user_id) {
         this.playlist_id = playlist_id;
         this.text = text;
@@ -30,7 +28,7 @@ public class Playlist implements Subject {
         return null;
     }
 
- 
+
     public void setCurrentTrackIndex(int index) {
         if (index >= 0 && index < tracks.size()) {
             this.currentTrackIndex = index;
@@ -42,7 +40,7 @@ public class Playlist implements Subject {
      public TrackIterator createIterator() {
          return new PlaylistIterator(this);
      }
-    
+
     @Override
     public void addObserver(Observer o) {
         observers.add(o);

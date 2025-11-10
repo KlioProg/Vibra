@@ -7,7 +7,7 @@ import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFac
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
-import com.mycompany.vibra.musicUtilities.Track;
+import com.mycompany.vibra.model.Track;
 
 import java.awt.*;
 import javax.swing.BorderFactory;
