@@ -28,28 +28,24 @@ public class MusicPanel extends JPanel {
         audioPlayer = new AudioPlayer();
         //placeholder playlist
         mainPlaylist = new Playlist(1, "My Playlist", 1); // (Example ID, name, user ID)
-
-        // ✅ 2. Create the TrackListPanel and GIVE it the player
-        trackListPanel = new TrackListPanel(audioPlayer);
-        trackListPanel.setPreferredSize(new Dimension(332, 0));
-        add(trackListPanel, BorderLayout.WEST);
-
-        // ✅ 3. Create the MusicPlayerPanel and GIVE it the player
-        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanel);
         
-        // Left: Track list
-        TrackListPanel trackListPanel = new TrackListPanel(audioPlayer);
-        trackListPanel.setPreferredSize(new Dimension(332, 0));
-        add(trackListPanel, BorderLayout.WEST);
-
-        // Center: Music player panel (share AudioPlayer ✅)
+        // --- This is the key change ---
+        // 1. Create the MusicPlayerPanel FIRST. It's the central component.
         musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanel);
         musicPlayerPanel.setPreferredSize(new Dimension(610, 0));
-        add(musicPlayerPanel, BorderLayout.CENTER);
-
-        // ✅ 4. Create the MainLibraryPanel and GIVE it the other two panels
+        
+        // 2. Create the TrackListPanel and give it a reference to the MusicPlayerPanel.
+        //    This is how the track list will tell the player what to play.
+        trackListPanel = new TrackListPanel(musicPlayerPanel); // Pass the player panel, not the audio player
+        trackListPanel.setPreferredSize(new Dimension(332, 0));
+        
+        // 3. Create the MainLibraryPanel, giving it the other two panels.
         mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel);
         mainLibraryPanel.setPreferredSize(new Dimension(402, 0));
+        
+        // 4. Add the final, wired-up components to the layout.
+        add(trackListPanel, BorderLayout.WEST);
+        add(musicPlayerPanel, BorderLayout.CENTER);
         add(mainLibraryPanel, BorderLayout.EAST);
     }
 

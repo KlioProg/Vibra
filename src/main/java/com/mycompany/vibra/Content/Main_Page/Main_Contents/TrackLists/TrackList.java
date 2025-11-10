@@ -5,8 +5,8 @@ import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFac
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
-import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.musicUtilities.Track;
 
 import java.awt.*;
@@ -23,7 +23,7 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
 
     // --- Fields ---
     private Track track; // Holds all the track data
-    private static AudioPlayer audioPlayer; // For playing the song
+    private MusicPlayerPanel musicPlayerPanel; // A reference to the player panel
 
     // --- UI Components that need to change color ---
     private static IconFactory themeIcons;
@@ -38,13 +38,14 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
     /**
      * ✅ NEW CONSTRUCTOR
      * Creates a new TrackList component based on a Track data object.
-     *
-     * @param track       The Track object containing all metadata.
+     * @param track The Track object containing all metadata.
      * @param trackNumber The position of this track in the list (e.g., 1, 2, 3...).
+     * @param musicPlayerPanel A reference to the main player panel.
      */
-    public TrackList(Track track, int trackNumber) {
+    public TrackList(Track track, int trackNumber, MusicPlayerPanel musicPlayerPanel) {
         super();
         this.track = track;
+        this.musicPlayerPanel = musicPlayerPanel; // Store the reference
 
         // --- Setup the button itself ---
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -63,8 +64,9 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
 
         // Action: play when clicked
         addActionListener(e -> {
-            if (audioPlayer != null) {
-                audioPlayer.play(track);
+            // When this button is clicked, tell the music player to load this track.
+            if (musicPlayerPanel != null) {
+                musicPlayerPanel.loadTrack(track);
             }
         });
     }
@@ -177,12 +179,5 @@ public class TrackList extends JButton implements ThemeManager.ThemeChangerListe
      */
     public void updateTrackNumber(int number) {
         trackNumberLabel.setText(String.format("%02d", number));
-    }
-
-    /**
-     * Sets the static AudioPlayer instance for all TrackList components.
-     */
-    public static void setAudioPlayer(AudioPlayer player) {
-        audioPlayer = player;
     }
 }

@@ -1,18 +1,15 @@
 package com.mycompany.vibra.Content.Main_Page;
 
-import com.mycompany.vibra.Content.Login_Panel.LoginContentPanel;
-import com.mycompany.vibra.Content.MainAppFrame;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Album_Panel.AlbumPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel;
 // ✅ IMPORT the panels we now need to assemble
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MainLibraryPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
-import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
-import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedIconButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.Vibra;
@@ -39,6 +36,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     // Keep references to sidebar icons for theme changes
     private JLabel logoLabel;
     private JLabel musicLabel;
+    private JLabel albumLabel;
     private JLabel likedLabel;
     private JButton logoutButton;
 
@@ -99,6 +97,13 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
 
         sidebar.add(Box.createVerticalStrut(24));
 
+        albumLabel = new JLabel(iconFactory.createIcon("album_cover"));
+        JPanel albumPanel = createSidebarIcon(albumLabel, "Album", "album_cover", "album_cover_hover");
+        albumPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sidebar.add(albumPanel);
+
+        sidebar.add(Box.createVerticalStrut(24));
+
         likedLabel = new JLabel(iconFactory.createIcon("heart"));
         JPanel likedPanel = createSidebarIcon(likedLabel, "Liked", "heart", "heart_hover");
         likedPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -119,15 +124,19 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         // This new panel will hold the persistent TrackList and the swappable cards
         JPanel mainContentArea = new JPanel(new BorderLayout());
 
-        // --- 4. Instantiate and add persistent TrackListPanel ---
-        trackListPanel = new TrackListPanel(audioPlayer);
-        trackListPanel.setPreferredSize(new Dimension(332, 0));
-        mainContentArea.add(trackListPanel, BorderLayout.WEST);
+        // --- 4. Instantiate all panels, injecting dependencies as we go ---
+        // We create the musicPlayerPanel FIRST, as other panels depend on it.
+        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanelInstance);
 
         // --- 5. Instantiate the other panels ---
-        // These panels will go inside the CardLayout
-        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanelInstance);
+        // Now, create the track list and library, giving them a reference to the player.
+        // This is where the error was. We pass musicPlayerPanel, not audioPlayer.
+        trackListPanel = new TrackListPanel(musicPlayerPanel);
         mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel);
+
+        // This is dependency injection: We give the LikedPanel a way to communicate
+        // with the MusicPlayerPanel by passing a reference to it for future use.
+        likedPanelInstance.setMusicPlayerPanel(musicPlayerPanel);
 
         // --- 6. Build the "MusicPlayer" card ---
         // This card will hold the center player and right library
@@ -137,10 +146,15 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         musicPlayerCard.add(musicPlayerPanel, BorderLayout.CENTER);
         musicPlayerCard.add(mainLibraryPanel, BorderLayout.EAST);
 
+        // --- Add the persistent TrackListPanel to the main content area ---
+        trackListPanel.setPreferredSize(new Dimension(332, 0));
+        mainContentArea.add(trackListPanel, BorderLayout.WEST);
+
         // --- 7. Add cards to the contentPanel (the one with CardLayout) ---
         // contentPanel was already created as: new JPanel(cardLayout)
         contentPanel.add(musicPlayerCard, "MusicPlayer"); // Card 1
         contentPanel.add(likedPanelInstance, "Liked");    // Card 2
+        contentPanel.add(new AlbumPanel(), "Album");       // Card 3
 
         // --- 8. Add the swappable contentPanel to the main area ---
         mainContentArea.add(contentPanel, BorderLayout.CENTER);
@@ -227,6 +241,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
 
         ImageIcon musicIcon = iconFactory.createIcon("music");
         ImageIcon likedIcon = iconFactory.createIcon("heart");
+        ImageIcon albumIcon = iconFactory.createIcon("album_cover");
         ImageIcon logoIcon = iconFactory.createIcon("vibra_logo");
         ImageIcon logoutIcon = iconFactory.createIcon("logout");
         ImageIcon logoutHoverIcon = iconFactory.createIcon("logout_hover");
@@ -238,6 +253,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         logoLabel.setIcon(logoIcon);
         musicLabel.setIcon(musicIcon);
         likedLabel.setIcon(likedIcon);
+        albumLabel.setIcon(albumIcon);
 
         // 🪄 Update the logout button
         if (logoutButton != null) {

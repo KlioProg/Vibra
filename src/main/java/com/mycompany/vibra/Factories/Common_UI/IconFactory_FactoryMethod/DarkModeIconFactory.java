@@ -15,6 +15,10 @@ public class DarkModeIconFactory extends IconFactory {
             case "music" -> createIcon("/icons/music_white.png", 28, 28);
             case "theme_button" -> createIcon("/images/darkMode.png", 28, 28);
             case "like" -> createIcon("/images/like_button.png", 28, 28);
+            case "album_cover" -> createIcon("/icons/library_white.png", 28, 28);
+
+            //hover dark-mode icons
+            case "album_cover_hover" -> createIcon("/icons/library_dark.png", 28, 28);
             case "heart_hover" -> createIcon("/icons/heart_dark.png", 28, 28);
             case "music_hover" -> createIcon("/icons/music_dark.png", 28, 28);
             case "like_pressed" -> createIcon("/images/like_pressed.png", 28, 28);
@@ -28,4 +32,3 @@ public class DarkModeIconFactory extends IconFactory {
         };
     }
 }
-

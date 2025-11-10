@@ -2,7 +2,13 @@ package com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel;
 
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+import com.mycompany.vibra.Factories.Common_UI.GradientPainter;
+import com.mycompany.vibra.Factories.Common_UI.RoundedBackdropFactory;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
+import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
+import com.mycompany.vibra.musicUtilities.Mp3Utils;
+import com.mycompany.vibra.musicUtilities.Track;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,21 +16,22 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
 /**
  *
  * @author robbiebelen
  */
-public class LikedPanel extends JPanel {
+public class LikedPanel extends JPanel implements ThemeManager.ThemeChangerListener {
     
     //DESIGN SYSTEM 
     private static final Color GRADIENT_COLOR_1 = new Color(157, 78, 221);  // #9D4EDD
     private static final Color GRADIENT_COLOR_2 = new Color(87, 0, 255);    // #5700FF
     private static final Color GRADIENT_COLOR_3 = new Color(157, 78, 221);  // #9D4EDD
-    private static final Color DARK_PANEL_BG = new Color(48, 48, 48);      // Dark backdrop #303030
+    // Gradient properties
+    private static final float[] GRADIENT_FRACTIONS = {0.0f, 0.5f, 1.0f};
+    private static final Color[] GRADIENT_COLORS = {GRADIENT_COLOR_1, GRADIENT_COLOR_2, GRADIENT_COLOR_3};
+
     private static final Color HEADER_BG = new Color(64, 64, 64);        // #404040
     private static final Color CARD_BG = new Color(55, 55, 55);          // Neutral-700
     private static final Color CARD_HOVER_BG = new Color(70, 70, 70);
@@ -38,23 +45,34 @@ public class LikedPanel extends JPanel {
     // UI Components
     private JPanel songListContainer;
     private JPanel emptyStateContent;
-    private JPanel darkBackdrop;
-    private List<Song> displaySongs;
-
-    // private static final List<Song> MOCK_SONGS = Arrays.asList(
-    //         new Song("Pasilyo", "Sunkissed Lola", "4:30",
-    //                 new ImageIcon(LikedPanel.class.getResource("/placeholders/pasilyo.jpg")).getImage()),
-    //         new Song("Unang Tingin", "Samuel Timothy", "4:30",
-    //                 new ImageIcon(LikedPanel.class.getResource("/placeholders/unang tingin.jpg")).getImage()),
-    //         new Song("She's not into you pare", "Friends Came Over", "3:49",
-    //                 new ImageIcon(LikedPanel.class.getResource("/placeholders/she's just not that into you pare.jpg")).getImage())
-    // );
+    private RoundedBackdropFactory darkBackdrop;
+    private JLabel header;
+    private JLabel subheader;
+    private JLabel emptyMessage;
+    private JLabel titleHeaderLabel;
+    private JLabel artistHeaderLabel;
+    private JLabel durationHeaderLabel;
+    private List<Track> displaySongs;
+    private MusicPlayerPanel musicPlayerPanel;
     
     public LikedPanel() {
         this.fontFactory = new DunbarFactory();
         this.displaySongs = new ArrayList<>();
+        ThemeManager.getInstance().addThemeChangerListener(this);
+
         initializeUI();
+        applyTheme(ThemeManager.getInstance().isDarkMode());
         updateContentState();
+    }
+
+    /**
+     * This method allows the main application frame (MainCardPanel) to give this panel
+     * a reference to the central music player. This is a clean way to enable communication
+     * without creating tight coupling.
+     * @param musicPlayerPanel The application's single MusicPlayerPanel instance.
+     */
+    public void setMusicPlayerPanel(MusicPlayerPanel musicPlayerPanel) {
+        this.musicPlayerPanel = musicPlayerPanel;
     }
     
     private void initializeUI() {
@@ -72,20 +90,18 @@ public class LikedPanel extends JPanel {
         topSection.setOpaque(false);
         
         // Header: "Liked Songs"
-        JLabel header = new JLabel("Liked Songs");
+        header = new JLabel("Liked Songs");
         // USE FONTLOADERFACTORY
         header.setFont(fontFactory.createFont("dunbartall_bold", 50));
-        header.setForeground(TEXT_WHITE);
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         topSection.add(header);
         
         topSection.add(Box.createVerticalStrut(5));
         
         // Subheader: "Certified bops only."
-        JLabel subheader = new JLabel("Certified bops only.");
+        subheader = new JLabel("Certified bops only.");
         // USE FONTLOADERFACTORY
         subheader.setFont(fontFactory.createFont("dunbartall_bold", 20));
-        subheader.setForeground(TEXT_WHITE);
         subheader.setAlignmentX(Component.LEFT_ALIGNMENT);
         topSection.add(subheader);
         
@@ -94,20 +110,7 @@ public class LikedPanel extends JPanel {
         mainContainer.add(topSection, BorderLayout.NORTH);
         
         // Dark backdrop panel 
-        darkBackdrop = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
-                // Dark rounded background
-                g2d.setColor(DARK_PANEL_BG);
-                g2d.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 20, 20));
-                
-                g2d.dispose();
-            }
-        };
-        darkBackdrop.setOpaque(false);
+        darkBackdrop = new RoundedBackdropFactory(new BorderLayout(), 20);
         darkBackdrop.setBorder(new EmptyBorder(20, 20, 20, 20));
         
         // Table header
@@ -183,27 +186,8 @@ public class LikedPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        paintRadialGradient(g); // Draw the gradient background
-    }
-    
-    
-    private void paintRadialGradient(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        int w = getWidth();
-        int h = getHeight();
-        Point2D center = new Point2D.Float(w / 2f, h / 2f);
-        float radius = (float) Math.sqrt(w * w + h * h) / 2f;
-        
-        float[] fractions = {0.0f, 0.33f, 1.0f};
-        Color[] colors = {GRADIENT_COLOR_1, GRADIENT_COLOR_2, GRADIENT_COLOR_3};
-        
-        RadialGradientPaint gradient = new RadialGradientPaint(center, radius, fractions, colors);
-        g2d.setPaint(gradient);
-        g2d.fillRect(0, 0, w, h);
-        g2d.dispose();
+        // Use the centralized GradientPainter utility to draw the background
+        GradientPainter.paintRadialGradient(g, this, GRADIENT_COLORS, GRADIENT_FRACTIONS);
     }
     
     /**
@@ -227,10 +211,9 @@ public class LikedPanel extends JPanel {
         // Empty message - Dunbar SemiBold
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
-        JLabel emptyMessage = new JLabel("Crickets..* tap that heart and add some bangers!");
+        emptyMessage = new JLabel("Crickets..* tap that heart and add some bangers!");
         // USE FONTLOADERFACTORY
         emptyMessage.setFont(fontFactory.createFont("dunbartall_bold", 28));
-        emptyMessage.setForeground(TEXT_GRAY);
         emptyMessage.setHorizontalAlignment(SwingConstants.CENTER);
         emptyPanel.add(emptyMessage, gbc);
         
@@ -270,30 +253,27 @@ public class LikedPanel extends JPanel {
         gbc.gridx = 0;
         gbc.weightx = 0.4;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel titleLabel = new JLabel("Title");
+        titleHeaderLabel = new JLabel("Title");
         // USE FONTLOADERFACTORY
-        titleLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
-        titleLabel.setForeground(TEXT_PURPLE);
-        headerContent.add(titleLabel, gbc);
+        titleHeaderLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
+        headerContent.add(titleHeaderLabel, gbc);
         
         // Artist - dunbar SemiBold
         gbc.gridx = 1;
         gbc.weightx = 0.4;
-        JLabel artistLabel = new JLabel("Artist");
+        artistHeaderLabel = new JLabel("Artist");
         // USE FONTLOADERFACTORY
-        artistLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
-        artistLabel.setForeground(TEXT_PURPLE);
-        headerContent.add(artistLabel, gbc);
+        artistHeaderLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
+        headerContent.add(artistHeaderLabel, gbc);
         
         // Duration - dunbar SemiBold
         gbc.gridx = 2;
         gbc.weightx = 0.2;
         gbc.anchor = GridBagConstraints.EAST;
-        JLabel durationLabel = new JLabel("Duration");
+        durationHeaderLabel = new JLabel("Duration");
         // USE FONTLOADERFACTORY
-        durationLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
-        durationLabel.setForeground(TEXT_PURPLE);
-        headerContent.add(durationLabel, gbc);
+        durationHeaderLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
+        headerContent.add(durationHeaderLabel, gbc);
         
         header.add(headerContent, BorderLayout.CENTER);
         return header;
@@ -330,12 +310,12 @@ public class LikedPanel extends JPanel {
      * Individual song card component
      */
     private class SongCard extends JPanel {
-        private Song song;
+        private Track track;
         private boolean isHovered = false;
         private boolean isHeartHovered = false;
-        
-        public SongCard(Song song) {
-            this.song = song;
+
+        public SongCard(Track track) {
+            this.track = track;
             setLayout(new BorderLayout());
             setOpaque(false);
             setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
@@ -373,26 +353,26 @@ public class LikedPanel extends JPanel {
             // Song title - Dunbar SemiBold
             gbc.gridx = 1;
             gbc.weightx = 0.4;
-            JLabel titleLabel = new JLabel(song.getTitle());
+            JLabel titleLabel = new JLabel(track.getTitle());
             // USE FONTLOADERFACTORY
             titleLabel.setFont(fontFactory.createFont("dunbartall_bold", 15));
             titleLabel.setForeground(TEXT_WHITE);
             contentPanel.add(titleLabel, gbc);
-            
+
             // Artist name - Dunbar SemiBold
             gbc.gridx = 2;
             gbc.weightx = 0.4;
-            JLabel artistLabel = new JLabel(song.getArtist());
+            JLabel artistLabel = new JLabel(track.getArtist());
             // USE FONTLOADERFACTORY
             artistLabel.setFont(fontFactory.createFont("dunbartall_bold", 13));
             artistLabel.setForeground(TEXT_GRAY);
             contentPanel.add(artistLabel, gbc);
-            
+
             // Duration - Dunbar SemiBold
             gbc.gridx = 3;
             gbc.weightx = 0.15;
             gbc.anchor = GridBagConstraints.EAST;
-            JLabel durationLabel = new JLabel(song.getDuration());
+            JLabel durationLabel = new JLabel(Mp3Utils.formatMinutes(track.getDuration()));
             // USE FONTLOADERFACTORY
             durationLabel.setFont(fontFactory.createFont("dunbartall_bold", 13));
             durationLabel.setForeground(TEXT_GRAY);
@@ -419,11 +399,20 @@ public class LikedPanel extends JPanel {
                     isHovered = false;
                     repaint();
                 }
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    // When a card is clicked, we check if we have a reference
+                    // to the music player and, if so, tell it to load our track.
+                    if (musicPlayerPanel != null) {
+                        musicPlayerPanel.loadTrack(track);
+                    }
+                }
             });
         }
         
         private JPanel createAlbumArt() {
-                Image artImage = song.getAlbumArt();
+                Image artImage = track.getAlbumArtImage();
                 int size = 40;
             JPanel art = new JPanel() {
                 @Override
@@ -505,7 +494,7 @@ public class LikedPanel extends JPanel {
             timer.addActionListener(e -> {
                 opacity[0] -= 0.1f;
                 if (opacity[0] <= 0) {
-                    removeSong(song);
+                    removeSong(track);
                     timer.stop();
                 } else {
                     repaint();
@@ -517,18 +506,18 @@ public class LikedPanel extends JPanel {
     
     // === PUBLIC API ===
     
-    public void addSong(Song song) {
-        if (!displaySongs.contains(song)) {
-            displaySongs.add(song);
+    public void addSong(Track track) {
+        if (!displaySongs.contains(track)) {
+            displaySongs.add(track);
             updateContentState();
         }
     }
     
-    public void removeSong(Song song) {
-        displaySongs.remove(song);
+    public void removeSong(Track track) {
+        displaySongs.remove(track);
         updateContentState();
     }
-    
+
     public void clearAll() {
         displaySongs.clear();
         updateContentState();
@@ -566,68 +555,51 @@ public class LikedPanel extends JPanel {
      */
     private void refreshSongList() {
         songListContainer.removeAll();
-        
-        for (Song song : displaySongs) {
-            SongCard card = new SongCard(song);
+
+        for (Track track : displaySongs) {
+            SongCard card = new SongCard(track);
             songListContainer.add(card);
             songListContainer.add(Box.createVerticalStrut(6));
         }
-        
+
         songListContainer.revalidate();
         songListContainer.repaint();
     }
-    
-    // === SONG DATA MODEL ===
-    
-    public static class Song {
-        private String title;
-        private String artist;
-        private String duration;
-        private Image albumArt;
-        
-        public Song(String title, String artist, String duration, Image albumArt) {
-            this.title = title;
-            this.artist = artist;
-            this.duration = duration;
-            this.albumArt = null;
-        }
-        
-        public String getTitle() { return title; }
-        public String getArtist() { return artist; }
-        public String getDuration() { return duration; }
-        public Image getAlbumArt() { return albumArt; }
-        // ADDED: equals/hashCode for List.contains check to work correctly
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Song song = (Song) o;
-            return title.equals(song.title) && artist.equals(song.artist);
-        }
-        
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(title, artist);
-       }
-    }
-    
+
     // === DEMO ===
-    
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Liked Songs Panel");
-           frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            
-           // Create panel
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            // Create panel
             LikedPanel panel = new LikedPanel();
-            
+
             frame.add(panel, BorderLayout.CENTER);
             frame.setSize(1100, 1150);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
     }
-    
-}
 
-    
+    private void applyTheme(boolean isDark) {
+        Color foreground = ThemeManager.getInstance().getForegroundColor();
+        Color accent = ThemeManager.getInstance().getAccentColor();
+
+        darkBackdrop.setBackground(ThemeManager.getInstance().getContainerColor());
+
+        header.setForeground(foreground);
+        subheader.setForeground(foreground);
+        emptyMessage.setForeground(isDark ? TEXT_GRAY : new Color(100, 100, 100));
+
+        titleHeaderLabel.setForeground(accent);
+        artistHeaderLabel.setForeground(accent);
+        durationHeaderLabel.setForeground(accent);
+    }
+
+    @Override
+    public void onThemeChanged(boolean isDarkMode) {
+        applyTheme(isDarkMode);
+    }
+}

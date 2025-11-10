@@ -13,7 +13,10 @@ public class LightModeIconFactory extends IconFactory {
             case "default_cover" -> createIcon("/images/default_cover.png", 250, 250);
             case "music" -> createIcon("/icons/music_dark.png", 28, 28);
             case "theme_button" -> createIcon("/images/lightMode.png", 28, 28);
+            case "album_cover" -> createIcon("/icons/library_dark.png", 28, 28);
+
             // Hover Light-mode icons
+            case "album_cover_hover" -> createIcon("/icons/library_white.png", 28, 28);
             case "heart_hover" -> createIcon("/icons/heart_white.png", 28, 28);
             case "music_hover" -> createIcon("/icons/music_white.png", 28, 28);
             case "logout" -> createIcon("/icons/Logout_black.png", 34,34);

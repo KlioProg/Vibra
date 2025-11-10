@@ -298,20 +298,11 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             likeButton.setIcon(isLiked ? likedIcon : heartIcon);
 
             if (isLiked) {
-                //  Get metadata from the current track
-                String title = currentTrack.getTitle();
-                String artist = currentTrack.getArtist();
-                String duration = Mp3Utils.formatMinutes((int) currentTrack.getDurationMs());
-                Image art = currentTrack.getAlbumArtImage();
-
-                // Create a new "LikedPanel.Song" object
-                LikedPanel.Song songToAdd = new LikedPanel.Song(title, artist, duration, art);
-
-                // Add it to the LikedPanel
-                likedPanel.addSong(songToAdd);
+                // Add the current track directly to the LikedPanel
+                likedPanel.addSong(currentTrack);
             } else {
-                // Find the song and remove it
-                // We can implement this next
+                // Remove the current track from the LikedPanel
+                likedPanel.removeSong(currentTrack);
             }
         });
 
@@ -492,6 +483,3 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     
 
     
-
-
-

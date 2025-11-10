@@ -18,8 +18,8 @@ import javax.swing.JScrollPane;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
-import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.musicUtilities.Track;
 
 public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerListener {
@@ -27,7 +27,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
     // --- Fields ---
     private ArrayList<TrackList> trackListComponents; // Holds the UI components
     private ArrayList<Track> tracks;                  // Holds the track data
-    private AudioPlayer audioPlayer;                  // The one player for the app
+    private MusicPlayerPanel musicPlayerPanel;        // A reference to the main player panel
     private JPanel trackListContainer;                // The panel that holds the actual track JButtons
     private JScrollPane scrollPane;                   // To make the list scrollable
 
@@ -35,16 +35,14 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
     private JLabel playLabel;
     FontFactory fontFactory = new DunbarFactory();
 
-    public TrackListPanel(AudioPlayer audioPlayer) {
+    // The constructor now accepts the MusicPlayerPanel.
+    public TrackListPanel(MusicPlayerPanel musicPlayerPanel) {
         setLayout(new BorderLayout());
         ThemeManager.getInstance().addThemeChangerListener(this);
 
-        this.audioPlayer = audioPlayer;
+        this.musicPlayerPanel = musicPlayerPanel; // Store the reference to the player
         tracks = new ArrayList<>();
         trackListComponents = new ArrayList<>();
-
-        // Set the static AudioPlayer for all TrackList instances to use
-        TrackList.setAudioPlayer(audioPlayer);
 
         // --- 2. Build Top Panel (Header) ---
         // This is your exact UI from your sample
@@ -117,8 +115,8 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
 
         int trackNum = 1;
         for (Track track : tracks) {
-            // ✅ This is where it creates your button component
-            TrackList trackComponent = new TrackList(track, trackNum);
+            // Create the track button, passing it a reference to the music player.
+            TrackList trackComponent = new TrackList(track, trackNum, musicPlayerPanel);
 
             trackListComponents.add(trackComponent);   // Add to our internal list
             trackListContainer.add(trackComponent);    // Add to the UI panel
