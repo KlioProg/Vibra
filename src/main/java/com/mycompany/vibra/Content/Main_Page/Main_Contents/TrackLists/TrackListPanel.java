@@ -20,7 +20,7 @@ import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFac
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
-import com.mycompany.vibra.model.Track;
+import com.mycompany.vibra.musicUtilities.Track;
 
 public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
