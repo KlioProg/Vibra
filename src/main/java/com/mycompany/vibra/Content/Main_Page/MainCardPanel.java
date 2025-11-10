@@ -49,8 +49,12 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     private AudioPlayer audioPlayer;
     private Playlist mainPlaylist;
 
+    private final int currentUserID;
 
-    public MainCardPanel() {
+
+    public MainCardPanel(int userID) {
+        this.currentUserID = userID;
+
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout); // This panel will swap cards
 
@@ -62,6 +66,10 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
 
         // Apply initial theme
         applyTheme(ThemeManager.getInstance().isDarkMode());
+}
+
+    public MainCardPanel() {
+        this(0);
     }
 
     private void changeCard(String text){
@@ -75,9 +83,9 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         iconFactory = isDark ? new DarkModeIconFactory() : new LightModeIconFactory();
 
         // --- 1. Instantiate all shared components ---
-        likedPanelInstance = new LikedPanel();
+        likedPanelInstance = new LikedPanel(this.currentUserID);
         audioPlayer = new AudioPlayer();
-        mainPlaylist = new Playlist(1, "My Playlist", 1); // Example playlist
+        mainPlaylist = new Playlist(1, "My Playlist", this.currentUserID); // Example playlist
 
         // --- 2. Build Sidebar (no change) ---
         sidebar = new JPanel();
@@ -126,7 +134,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
 
         // --- 5. Instantiate the other panels ---
         // These panels will go inside the CardLayout
-        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanelInstance);
+        musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanelInstance, this.currentUserID);
         mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel);
 
         // --- 6. Build the "MusicPlayer" card ---

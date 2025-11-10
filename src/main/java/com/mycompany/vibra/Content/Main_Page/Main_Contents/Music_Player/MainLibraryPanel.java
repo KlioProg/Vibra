@@ -9,6 +9,9 @@ import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
+import com.mycompany.vibra.musicUtilities.Track;
+import com.mycompany.vibra.service.TrackService;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory; // Import
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory; // Import
@@ -29,6 +32,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 
     private final MusicPlayerPanel musicPlayerPanel;
     private final TrackListPanel trackListPanel;
+    private final TrackService trackService;
     private JPanel playlistItemsContainer;
     private IconFactory themeIcons;
 
@@ -44,6 +48,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel) {
         this.musicPlayerPanel = musicPlayerPanel;
         this.trackListPanel = trackListPanel; // Store the reference
+        this.trackService = new TrackService();
 
         // Initialize theme icons right away
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
@@ -244,7 +249,32 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 //        return itemPanel;
 //    }
 
-    // ... (extractTrackFromFile method is fine) ...
+        // Text
+        JLabel nameLabel = new JLabel(name);
+        nameLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
+        nameLabel.setForeground(Color.WHITE);
+        nameLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+
+        itemPanel.add(artLabel);
+        itemPanel.add(nameLabel);
+
+        // ✅ Hover effect: highlight background on mouse enter/exit
+        itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                itemPanel.setPaintBackground(true);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                itemPanel.setPaintBackground(false);
+            }
+        });
+
+        return itemPanel;
+    }
+
+    // Your file extraction code, unchanged
     private Track extractTrackFromFile(File file) {
         try {
             Mp3File mp3 = new Mp3File(file);
@@ -316,6 +346,8 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 for (File selectedFile : fileChooser.getSelectedFiles()) {
                     Track track = extractTrackFromFile(selectedFile);
                     if (track != null) {
+                        trackService.addTrackIfMissing(track);
+                        System.out.println("Uploaded track: " + track.getTitle() + " | New ID: " + track.getId());
                         loadedTracks.add(track);
                     }
                 }
@@ -358,7 +390,11 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                     List<Track> tracks = new ArrayList<>();
                     for (File file : mp3Files) {
                         Track track = extractTrackFromFile(file);
-                        if (track != null) tracks.add(track);
+                        if (track != null) {
+                            trackService.addTrackIfMissing(track);
+                            System.out.println("Opened track: " + track.getTitle() + " | New ID: " + track.getId());
+                            tracks.add(track);
+                        }
                     }
 
                     // Send the new list to the TrackListPanel

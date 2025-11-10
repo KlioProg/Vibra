@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 public class Track {
+    private int id;
     private final String title;
     private final String artist;
     private final String album;
@@ -13,6 +14,7 @@ public class Track {
     private final int duration; // in seconds
     private final byte[] albumArt; // optional cover art
 
+    // Constructor for file scanning
     public Track(String title, String artist, String album, String filePath, int duration, byte[] albumArt) {
         this.title = cleanTitle(title);
         this.artist = artist;
@@ -20,16 +22,39 @@ public class Track {
         this.filePath = filePath;
         this.duration = duration;
         this.albumArt = albumArt;
+        this.id = -1;
+    }
+
+    // Constructor for database loading
+    public Track(int id, String title, String artist, String album, String filePath, int duration, byte[] albumArt) {
+        this.id = id;
+        this.title = cleanTitle(title);
+        this.artist = artist;
+        this.album = album;
+        this.filePath = filePath;
+        this.duration = duration;
+        this.albumArt = albumArt;
+        
     }
 
     // Getters
+    public int getId() { return id; }
     public String getTitle() { return title; }
     public String getArtist() { return artist; }
     public String getAlbum() { return album; }
     public String getFilePath() { return filePath; }
     public int getDuration() { return duration; } // in seconds
+    public String getDurationFormatted() {
+        int mins = duration / 60;
+        int secs = duration % 60;
+        return String.format("%d:%02d", mins, secs);
+    }
     public long getDurationMs() { return duration * 1000L; } // in milliseconds
     public byte[] getAlbumArt() { return albumArt; }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     // ✅ New helper
     public Image getAlbumArtImage() {
