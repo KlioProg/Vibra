@@ -4,6 +4,8 @@
  */
 package com.mycompany.vibra.model;
 
+import com.mycompany.vibra.musicUtilities.Track;
+
 /**
  *
  * @author robbiebelen

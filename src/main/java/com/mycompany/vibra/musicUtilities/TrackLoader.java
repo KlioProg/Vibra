@@ -2,7 +2,6 @@ package com.mycompany.vibra.musicUtilities;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
-import com.mycompany.vibra.model.Track;
 
 import java.io.File;
 import java.util.ArrayList;

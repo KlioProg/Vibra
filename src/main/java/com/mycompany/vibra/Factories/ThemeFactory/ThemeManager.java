@@ -15,12 +15,18 @@ public class ThemeManager {
     private final Color lightTrackAlbum = Color.decode("#ECEBE4");
     private final Color lightMusicPanel = Color.decode("#F8F9FA");
     private final Color lightForeground = Color.decode("#100D0D");
+    private final Color lightContainer = Color.decode("#FFFFFF");
+    private final Color lightCardHover = new Color(0xD9B1F1); // hover on album
+    private final Color lightSecondaryForeground = new Color(157,78,221);// color of # of songs in album
 
     // Dark theme colors
     private final Color darkSidebar = Color.decode("#010101");
     private final Color darkTrackAlbum = Color.decode("#100D0D");
     private final Color darkMusicPanel = Color.decode("#2B2C28");
     private final Color darkForeground = Color.WHITE;
+    private final Color darkContainer = new Color(48, 48, 48); // the backdrop panel
+    private final Color darkCardHover = new Color(0xD9B1F1); // hover on album in dark mode
+    private final Color darkSecondaryForeground = new Color(157,78,221); //color of # of songs in album
 
     // Accent color (stays constant)
     private final Color accentPurple = new Color(138, 43, 226);
@@ -67,6 +73,18 @@ public class ThemeManager {
 
     public Color getAccentColor() {
         return accentPurple;
+    }
+
+    public Color getContainerColor() {
+        return darkMode ? darkContainer : lightContainer;
+    }
+
+    public Color getCardHoverColor() {
+        return darkMode ? darkCardHover : lightCardHover;
+    }
+
+    public Color getSecondaryForegroundColor() {
+        return darkMode ? darkSecondaryForeground : lightSecondaryForeground;
     }
 
     // Theme listeners

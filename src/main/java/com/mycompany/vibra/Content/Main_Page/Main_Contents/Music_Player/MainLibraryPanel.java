@@ -10,11 +10,10 @@ import com.mpatric.mp3agic.Mp3File;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
-import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.service.TrackService;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
-
+import com.mycompany.vibra.musicUtilities.Track;
 // This is the CRUCIAL import
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 

@@ -314,40 +314,44 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 //            }
 //        });
 
-        //--liked button listener logic
+//--liked button listener logic
        likeButton.addActionListener(e -> {
             if (currentTrack == null || currentTrack.getId() == -1) {
-                // Can't like a track that isn't in the database
+                // Not a valid, saved track
                 return; 
             }
     
-            // We check the *cache*, not the 'isLiked' boolean
             boolean currentlyLiked = isTrackInCache(currentTrack);
             
             try {
                 if (currentlyLiked) {
                     // --- UNLIKE IT ---
-                    likedSongsDao.unlike(currentUserID, currentTrack.getId());
                     
-                    // Remove from cache and UI
-                    likedTracksList.removeIf(t -> t.getId() == currentTrack.getId());
-                    likedPanel.removeSong(currentTrack);
-                    likeButton.setIcon(heartIcon);
-                    isLiked = false; // Update the state
+                    // First, try to unlike in the DB
+                    if (likedSongsDao.unlike(currentUserID, currentTrack.getId())) {
+                        // --- Success! --- (The DAO will print the console log)
+                        // Now, update the UI and cache
+                        likedTracksList.removeIf(t -> t.getId() == currentTrack.getId());
+                        likedPanel.removeSong(currentTrack);
+                        likeButton.setIcon(heartIcon);
+                        isLiked = false;
+                    }
                     
                 } else {
                     // --- LIKE IT ---
-                    likedSongsDao.like(currentUserID, currentTrack.getId());
                     
-                    // Add to cache and UI
-                    likedTracksList.add(currentTrack);
-                    likedPanel.addSong(currentTrack);
-                    likeButton.setIcon(likedIcon);
-                    isLiked = true; // Update the state
+                    // First, try to like in the DB
+                    if (likedSongsDao.like(currentUserID, currentTrack.getId())) {
+                        // --- Success! --- (The DAO will print the console log)
+                        // Now, update the UI and cache
+                        likedTracksList.add(currentTrack);
+                        likedPanel.addSong(currentTrack);
+                        likeButton.setIcon(likedIcon);
+                        isLiked = true;
+                    }
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                // Database failed, do nothing
             }
         });
 
@@ -398,6 +402,79 @@ public class MusicPlayerPanel extends JPanel implements Observer{
                 isPlaying = true;
             }
         });
+    }
+    
+    // --- ADD THIS METHOD ---
+
+    /**
+
+     * Called by LikedPanel when a song is unliked from there.
+
+     * This forces the player's UI and cache to sync.
+
+     */
+
+    public void syncLikeStatus(Track track, boolean isNowLiked) {
+
+        // Remove from cache if unliked
+
+        if (!isNowLiked) {
+
+            likedTracksList.removeIf(t -> t.getId() == track.getId());
+
+        } else {
+
+            // Add to cache if liked (if not already there)
+
+            if (likedTracksList.stream().noneMatch(t -> t.getId() == track.getId())) {
+
+                likedTracksList.add(track);
+
+            }
+
+        }
+
+        
+
+        // If this is the track currently playing, update the icon
+
+        if (currentTrack != null && currentTrack.getId() == track.getId()) {
+
+            this.isLiked = isNowLiked;
+
+            likeButton.setIcon(isNowLiked ? likedIcon : heartIcon);
+
+        }
+
+    }
+
+
+    // --- ADD THIS METHOD ---
+
+    /**
+
+     * Called by LikedPanel when "Clear All" is pressed.
+
+     * Wipes the player's internal liked-song cache and updates the icon.
+
+     */
+
+    public void clearLikedCache() {
+
+        likedTracksList.clear();
+
+        
+
+        // If a liked song is currently playing, update its icon
+
+        if (isLiked) {
+
+            isLiked = false;
+
+            likeButton.setIcon(heartIcon);
+
+        }
+
     }
 
     // ADD THIS METHOD BACK (or ensure it's correct):
@@ -531,6 +608,3 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     
 
     
-
-
-

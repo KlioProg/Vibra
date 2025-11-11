@@ -1,7 +1,7 @@
 package com.mycompany.vibra.service;
 
 import com.mycompany.vibra.db.Database; // Use YOUR database class
-import com.mycompany.vibra.musicUtilities.Track; // Use YOUR Track model
+import com.mycompany.vibra.musicUtilities.Track;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
