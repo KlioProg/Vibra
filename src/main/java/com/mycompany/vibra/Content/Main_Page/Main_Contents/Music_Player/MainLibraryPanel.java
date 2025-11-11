@@ -5,39 +5,42 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+// --- MERGED IMPORTS ---
 import java.util.Map;
 import java.util.List;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.musicUtilities.TrackLoader;
-
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
-import com.mycompany.vibra.Factories.Common_UI.RoundPadderFactory;
-import com.mycompany.vibra.service.TrackService;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedIconButtonFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedPanelFactory;
+import com.mycompany.vibra.model.Observer;
+import com.mycompany.vibra.model.Playlist;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
-import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Album_Panel.AlbumPanel;
-// This is the CRUCIAL import
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
-
+import com.mycompany.vibra.service.TrackService; // From Final-Vibra
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
+    // --- MERGED FIELDS ---
     private final MusicPlayerPanel musicPlayerPanel;
     private final TrackListPanel trackListPanel;
-    private final AlbumPanel albumPanel;
-    private final TrackService trackService;
+    private final AlbumPanel albumPanel; // From Final-Vibra
+    private final TrackService trackService; // From Final-Vibra
     private JPanel playlistItemsContainer;
+    private IconFactory themeIcons; // From HEAD
 
     // Keep refs so we can update them on theme change
     private JPanel libraryPanel;
@@ -45,34 +48,36 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private JLabel yourLibraryLabel;
     FontFactory fontFactory = new DunbarFactory();
 
+    // --- MERGED CONSTRUCTOR ---
     public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel, AlbumPanel albumPanel) {
         this.musicPlayerPanel = musicPlayerPanel;
-        this.trackListPanel = trackListPanel; // Store the reference
+        this.trackListPanel = trackListPanel;
         this.albumPanel = albumPanel;
         this.trackService = new TrackService();
+        
+        // Initialize theme icons (from HEAD)
+        this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
 
         setLayout(new BorderLayout());
         initUI();
 
-        // register for theme updates
         ThemeManager.getInstance().addThemeChangerListener(this);
-        applyTheme();
+        applyTheme(); // Apply theme after initUI
 
-        String hardcodedScanPath = "/Users/eeeuweee/Music/vibramusic";
-
+        // Start hardcoded scan (from Final-Vibra)
+        String hardcodedScanPath = "/Users/eeeuweee/Music/vibramusic"; // ‼️ CHANGE THIS PATH
         new ScanWorker(hardcodedScanPath).execute();
     }
 
-    // Your UI code, unchanged
+    // --- MERGED initUI (uses friend's 'createCreatePlaylistButton') ---
     private void initUI() {
         // 1. This is the MAIN panel for this class
         libraryPanel = new JPanel();
         libraryPanel.setLayout(new BorderLayout(0, 12)); // BorderLayout with 12px vertical gap
         libraryPanel.setOpaque(false);
-        // Add padding to the main panel
         libraryPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 0, 12));
 
-        // 2. Top Panel (Header) - Unchanged
+        // 2. Top Panel (Header)
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.setOpaque(false);
@@ -80,58 +85,28 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
         albumLabel = new JLabel("Album");
-//        albumLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 36));
         albumLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
         topPanel.add(albumLabel);
 
-        // Add topPanel to the NORTH of libraryPanel
         libraryPanel.add(topPanel, BorderLayout.NORTH);
 
-        // 3. This is your new container, just like 'trackListContainer'
+        // 3. This is your new container
         playlistItemsContainer = new JPanel();
         playlistItemsContainer.setLayout(new BoxLayout(playlistItemsContainer, BoxLayout.Y_AXIS));
         playlistItemsContainer.setOpaque(false);
 
         // 4. Add items to the scrollable container
         yourLibraryLabel = new JLabel("Your Library");
-//        yourLibraryLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 20f));
         yourLibraryLabel.setFont(fontFactory.createFont("dunbartall_bold", 20));
         yourLibraryLabel.setAlignmentX(LEFT_ALIGNMENT);
         playlistItemsContainer.add(yourLibraryLabel);
 
         playlistItemsContainer.add(Box.createVerticalStrut(12));
-        playlistItemsContainer.add(createPlaylistButton());
+        
+        // --- USING FRIEND'S "CREATE PLAYLIST" BUTTON ---
+        playlistItemsContainer.add(createCreatePlaylistButton()); // From HEAD
 
         playlistItemsContainer.add(Box.createVerticalStrut(20));
-
-
-        JPanel item1 = createPlaylistItem(
-                new ImageIcon(getClass().getResource("/placeholders/car.png")),
-                "I'll be better for me.."
-        );
-        playlistItemsContainer.add(item1);
-        playlistItemsContainer.add(Box.createVerticalStrut(15));
-
-        JPanel item2 = createPlaylistItem(
-                new ImageIcon(getClass().getResource("/placeholders/cd.png")),
-                "best rnb playlist"
-        );
-        playlistItemsContainer.add(item2);
-        playlistItemsContainer.add(Box.createVerticalStrut(15));
-
-        JPanel item3 = createPlaylistItem(
-                new ImageIcon(getClass().getResource("/placeholders/lion.png")),
-                "OG Post Malone"
-        );
-        playlistItemsContainer.add(item3);
-        playlistItemsContainer.add(Box.createVerticalStrut(15));
-
-        JPanel item4 = createPlaylistItem(
-                new ImageIcon(getClass().getResource("/placeholders/dk.png")),
-                "Drake"
-        );
-        playlistItemsContainer.add(item4);
-
         playlistItemsContainer.add(Box.createVerticalGlue());
 
         JScrollPane scrollPane = new JScrollPane(playlistItemsContainer);
@@ -143,50 +118,127 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         libraryPanel.add(scrollPane, BorderLayout.CENTER);
-
         add(libraryPanel, BorderLayout.CENTER);
     }
 
-    private JPanel createPlaylistItem(ImageIcon cover, String name) {
-        // Create the round padder container (acts as the background)
-        RoundPadderFactory itemPanel = new RoundPadderFactory(15, 5, 10);
-        itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.X_AXIS));
-        itemPanel.setOpaque(false);
+    // --- USING FRIEND'S ADVANCED 'createPlaylistItem' (from HEAD) ---
+    private JPanel createPlaylistItem(final Playlist playlist) {
+        ThemeManager tm = ThemeManager.getInstance();
+        Color baseColor = tm.getSidebarColor();
+        Color hoverColor = new Color(0x535353); // The gray hover
+
+        RoundedPanelFactory itemPanel = new RoundedPanelFactory(
+                15, baseColor, null, 0, 0, 90
+        );
+        itemPanel.setLayout(new BorderLayout(12, 0));
         itemPanel.setAlignmentX(LEFT_ALIGNMENT);
-        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
-        itemPanel.setBackground(new Color(0x53, 0x53, 0x53)); // Hover color: #535353
+        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        itemPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Image (scaled)
-        Image scaledImg = cover.getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
-        JLabel artLabel = new JLabel(new ImageIcon(scaledImg));
-        artLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 12));
+        Image scaledImg = playlist.getCover().getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
+        final JLabel artLabel = new JLabel(new ImageIcon(scaledImg));
+        artLabel.setOpaque(false);
 
-        // Text
-        JLabel nameLabel = new JLabel(name);
+        RoundedPanelFactory coverClipper = new RoundedPanelFactory(
+                10, Color.BLACK, null, 0, 70, 70
+        );
+        coverClipper.setLayout(new BorderLayout());
+        coverClipper.add(artLabel, BorderLayout.CENTER);
+        itemPanel.add(coverClipper, BorderLayout.WEST);
+
+        JPanel textPanel = new JPanel();
+        textPanel.setOpaque(false);
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+
+        final JLabel nameLabel = new JLabel(playlist.getText());
         nameLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
-        nameLabel.setForeground(Color.WHITE);
-        nameLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        nameLabel.setForeground(tm.getForegroundColor());
+        nameLabel.setName("PLAYLIST_NAME_LABEL"); 
 
-        itemPanel.add(artLabel);
-        itemPanel.add(nameLabel);
+        final JLabel bioLabel = new JLabel(playlist.getBio());
+        bioLabel.setFont(fontFactory.createFont("dunbartall_book", 12));
+        bioLabel.setForeground(tm.isDarkMode() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+        bioLabel.setName("PLAYLIST_BIO_LABEL"); 
 
-        // ✅ Hover effect: highlight background on mouse enter/exit
+        textPanel.add(nameLabel);
+        textPanel.add(Box.createVerticalStrut(4));
+        textPanel.add(bioLabel);
+        textPanel.add(Box.createVerticalGlue());
+        itemPanel.add(textPanel, BorderLayout.CENTER);
+
+        ImageIcon editIcon = themeIcons.createIcon("edit");
+        JButton editButton = RoundedIconButtonFactory.createIconButton(
+                editIcon, null, 34, "Edit Playlist"
+        );
+        editButton.setName("EDIT_PLAYLIST_BUTTON");
+        itemPanel.add(editButton, BorderLayout.EAST);
+
         itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                itemPanel.setPaintBackground(true);
+                itemPanel.setBackgroundColor(hoverColor);
+                nameLabel.setForeground(Color.WHITE);
+                bioLabel.setForeground(Color.WHITE);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                itemPanel.setPaintBackground(false);
+                ThemeManager tm = ThemeManager.getInstance();
+                itemPanel.setBackgroundColor(tm.getSidebarColor());
+                nameLabel.setForeground(tm.getForegroundColor());
+                bioLabel.setForeground(tm.isDarkMode() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
             }
         });
+
+        itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getSource() == editButton || SwingUtilities.isDescendingFrom(e.getComponent(), editButton)) {
+                    return;
+                }
+                System.out.println("Clicked to play playlist: " + playlist.getText());
+                // TODO: Re-enable this when playlists hold tracks
+                // trackListPanel.loadTracksIntoPanel(playlist.getTracks());
+            }
+        });
+
+        editButton.addActionListener(e -> {
+            CreatePlaylistPanel createPanel = new CreatePlaylistPanel(
+                    playlist.getText(), playlist.getBio(), playlist.getCover()
+            );
+
+            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(itemPanel), "Edit Playlist", true);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.setUndecorated(true);
+            dialog.setBackground(new Color(0, 0, 0, 0));
+            dialog.setContentPane(createPanel);
+            dialog.pack();
+            dialog.setLocationRelativeTo(itemPanel);
+            dialog.setVisible(true);
+
+            if (createPanel.isPlaylistCreated()) {
+                playlist.setText(createPanel.getPlaylistName());
+                playlist.setBio(createPanel.getPlaylistBio());
+                playlist.setCover(createPanel.getPlaylistCover());
+            }
+        });
+
+        Observer uiUpdater = new Observer() {
+            @Override
+            public void update() {
+                nameLabel.setText(playlist.getText());
+                bioLabel.setText(playlist.getBio());
+                Image newScaledImg = playlist.getCover().getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
+                artLabel.setIcon(new ImageIcon(newScaledImg));
+            }
+        };
+        playlist.addObserver(uiUpdater);
 
         return itemPanel;
     }
 
-    // Your file extraction code, unchanged
+    // --- USING YOUR 'extractTrackFromFile' (from Final-Vibra, with trackNum) ---
     private Track extractTrackFromFile(File file) {
         try {
             Mp3File mp3 = new Mp3File(file);
@@ -194,7 +246,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
             String artist = "Unknown Artist";
             String album = "Unknown Album";
             int duration = (int) mp3.getLengthInSeconds();
-            int trackNum = 0;
+            int trackNum = 0; // Default
             byte[] albumArt = null;
 
             if (mp3.hasId3v2Tag()) {
@@ -202,10 +254,10 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 if (tag.getTitle() != null) title = tag.getTitle();
                 if (tag.getArtist() != null) artist = tag.getArtist();
                 if (tag.getAlbum() != null) album = tag.getAlbum();
+                
                 String trackStr = tag.getTrack(); // e.g., "1/12" or "1"
                 if (trackStr != null && !trackStr.isEmpty()) {
                     try {
-                        // Get the part before any "/"
                         String numberOnly = trackStr.split("/")[0];
                         trackNum = Integer.parseInt(numberOnly);
                     } catch (NumberFormatException e) {
@@ -215,6 +267,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 if (tag.getAlbumImage() != null) albumArt = tag.getAlbumImage();
             }
 
+            // Using the 7-argument constructor
             return new Track(title, artist, album, file.getAbsolutePath(), duration, trackNum, albumArt);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -222,7 +275,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         }
     }
 
-    // Your button styling code, unchanged
+    // (createStyledButton is unchanged, keeping it)
     private RoundedButtonFactory createStyledButton(String text) {
         RoundedButtonFactory button = new RoundedButtonFactory(text, 30);
         button.setBackground(new Color(0x9D4EDD));
@@ -253,28 +306,57 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    // Your playlist button code, unchanged
-    private RoundedButtonFactory createPlaylistButton() {
-        RoundedButtonFactory button = createStyledButton("Playlist");
+    // --- USING FRIEND'S 'createCreatePlaylistButton' (from HEAD) ---
+    private RoundedButtonFactory createCreatePlaylistButton() {
+        RoundedButtonFactory button = createStyledButton("Create Playlist");
         button.addActionListener(e -> {
-            System.out.println("Playlist button clicked!");
+            CreatePlaylistPanel createPanel = new CreatePlaylistPanel();
+
+            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Create New Playlist", true);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.setUndecorated(true);
+            dialog.setBackground(new Color(0, 0, 0, 0));
+            dialog.setContentPane(createPanel);
+            dialog.pack();
+            dialog.setLocationRelativeTo(this);
+            dialog.setVisible(true);
+
+            if (createPanel.isPlaylistCreated()) {
+                String newName = createPanel.getPlaylistName();
+                String newBio = createPanel.getPlaylistBio();
+                ImageIcon newCover = createPanel.getPlaylistCover();
+                
+                // ‼️ NOTE: '1' and '0' are placeholders.
+                // You will need to get the real currentUserID from your MainCardPanel.
+                int currentUserId = 1; 
+                int newPlaylistId = 0; 
+
+                Playlist newPlaylist = new Playlist(
+                        newPlaylistId,
+                        newName,
+                        newBio,
+                        newCover,
+                        currentUserId
+                );
+
+                JPanel newItem = createPlaylistItem(newPlaylist);
+
+                playlistItemsContainer.remove(playlistItemsContainer.getComponentCount() - 1); // Remove glue
+                playlistItemsContainer.add(newItem);
+                playlistItemsContainer.add(Box.createVerticalStrut(15));
+                playlistItemsContainer.add(Box.createVerticalGlue()); // Add glue back
+
+                playlistItemsContainer.revalidate();
+                playlistItemsContainer.repaint();
+            }
         });
         return button;
     }
 
-    // --- ADD THIS ENTIRE INNER CLASS ---
-    
-    /**
-     * A background task to scan a directory for .mp3 files
-     * without freezing the application UI.
-     */
+    // --- USING YOUR 'ScanWorker' (from Final-Vibra) ---
     private class ScanWorker extends SwingWorker<Map<String, List<Track>>, Void> {
         private final String scanPath;
 
-        /**
-         * Creates a new worker that will scan the specified path.
-         * @param path The absolute file path to scan (e.g., "/Users/You/Music/MyFolder")
-         */
         public ScanWorker(String path) {
             this.scanPath = path;
         }
@@ -282,8 +364,8 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         @Override
         protected Map<String, List<Track>> doInBackground() throws Exception {
             System.out.println("ScanWorker: Starting scan...");
-
-            // 1. Use your new loader to get all tracks
+            
+            // 1. Use TrackLoader to get all tracks
             List<Track> foundTracks = TrackLoader.loadTracks(scanPath);
 
             // 2. Save each track to the database (this updates their IDs)
@@ -302,31 +384,72 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         protected void done() {
             try {
                 Map<String, List<Track>> albums = get();
-
                 albumPanel.displayRealAlbums(albums);
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
-    // --- END OF SCANWORKER CLASS ---
 
-    // Your theme code, unchanged
+    // --- (applyTheme is simple, unchanged) ---
     private void applyTheme() {
         ThemeManager tm = ThemeManager.getInstance();
         setBackground(tm.getSidebarColor());
         libraryPanel.setBackground(tm.getSidebarColor());
-
         albumLabel.setForeground(tm.getForegroundColor());
         yourLibraryLabel.setForeground(tm.getForegroundColor());
     }
 
-    // Your theme code, unchanged
+    // --- USING FRIEND'S ADVANCED 'onThemeChanged' (from HEAD) ---
     @Override
     public void onThemeChanged(boolean isDarkMode) {
-        applyTheme();
-        repaint();
+        ThemeManager tm = ThemeManager.getInstance();
+
+        // 1. Get the new theme-specific icon factory
+        themeIcons = isDarkMode ? new DarkModeIconFactory() : new LightModeIconFactory();
+        Icon newEditIcon = themeIcons.createIcon("edit");
+
+        // 2. Update all existing playlist item panels
+        if (playlistItemsContainer != null) {
+            for (Component item : playlistItemsContainer.getComponents()) {
+                if (item instanceof RoundedPanelFactory) {
+                    RoundedPanelFactory itemPanel = (RoundedPanelFactory) item;
+                    itemPanel.setBackgroundColor(tm.getSidebarColor());
+
+                    LayoutManager layout = itemPanel.getLayout();
+                    if (layout instanceof BorderLayout) {
+                        Component centerComponent = ((BorderLayout) layout).getLayoutComponent(BorderLayout.CENTER);
+                        if (centerComponent instanceof JPanel) {
+                            JPanel textPanel = (JPanel) centerComponent;
+                            for (Component textComp : textPanel.getComponents()) {
+                                String name = textComp.getName();
+                                if (name != null) {
+                                    switch (name) {
+                                        case "PLAYLIST_NAME_LABEL":
+                                            ((JLabel) textComp).setForeground(tm.getForegroundColor());
+                                            break;
+                                        case "PLAYLIST_BIO_LABEL":
+                                            ((JLabel) textComp).setForeground(isDarkMode ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+
+                        Component eastComponent = ((BorderLayout) layout).getLayoutComponent(BorderLayout.EAST);
+                        if (eastComponent instanceof JButton && "EDIT_PLAYLIST_BUTTON".equals(eastComponent.getName())) {
+                            ((JButton) eastComponent).setIcon(newEditIcon);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Apply the theme to the parent panel itself
+        applyTheme(); 
+
+        // 4. Repaint everything
         revalidate();
+        repaint();
     }
 }
