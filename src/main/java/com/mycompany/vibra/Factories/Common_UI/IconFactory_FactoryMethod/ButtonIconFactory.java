@@ -25,6 +25,7 @@ public class ButtonIconFactory extends IconFactory {
             // Defaults Hover
             case "liked_pressed" -> createIcon("/images/like_pressed.png", 28, 27);
 
+
             default -> {
                 System.err.println("Unknown button icon type: " + type);
                 yield new ImageIcon();

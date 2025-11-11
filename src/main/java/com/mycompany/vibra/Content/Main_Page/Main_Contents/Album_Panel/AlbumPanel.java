@@ -6,23 +6,25 @@ import com.mycompany.vibra.Factories.Common_UI.RoundedBackdropFactory;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 import com.mycompany.vibra.Factories.Common_UI.GradientPainter;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
+import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI; // ✅ NEW IMPORT
+import com.mycompany.vibra.musicUtilities.Track;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.util.Comparator;
 
-import java.util.List; // <-- ADD THIS
+import java.util.List;
 import java.util.Map;
-import java.awt.event.MouseAdapter; // <-- ADD THIS
-import java.awt.event.MouseEvent; // <-- ADD THIS
-import com.mycompany.vibra.musicUtilities.Track; // <-- ADD THIS
-
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.*;
+
 
 public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
     private TrackListPanel trackListPanel;
     private JPanel gridPanel;
+    private JScrollPane scrollPane; // ✅ MADE FIELD TO ACCESS SCROLLBAR
 
     // Design System for this panel
     private static final Color GRADIENT_COLOR_CENTER = new Color(0, 119, 255); // Bright Blue
@@ -39,8 +41,8 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
     private RoundedBackdropFactory darkBackdrop;
 
     public void setTrackListPanel(TrackListPanel trackListPanel) {
-    this.trackListPanel = trackListPanel;
-}
+        this.trackListPanel = trackListPanel;
+    }
 
     public void displayRealAlbums(Map<String, List<Track>> albums) {
         // 1. Clear any old data
@@ -119,7 +121,7 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         gridPanel.setOpaque(false);
 
         // Use a scroll pane for the grid
-        JScrollPane scrollPane = new JScrollPane(gridPanel);
+        scrollPane = new JScrollPane(gridPanel); // ✅ ASSIGNED TO FIELD
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
@@ -130,21 +132,47 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         add(darkBackdrop, BorderLayout.CENTER);
 
         applyTheme(ThemeManager.getInstance().isDarkMode());
+        applyScrollBarTheme(); // ✅ APPLY ON INITIAL LOAD
+    }
+
+    /**
+     * Applies the custom UI to the scrollbar based on the current theme.
+     */
+    private void applyScrollBarTheme() {
+        if (scrollPane == null) return;
+
+        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+        verticalScrollBar.setUI(new CustomScrollBarUI());
+
+        verticalScrollBar.revalidate();
+        verticalScrollBar.repaint();
+
+        // Match the corner color to the backdrop color
+        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new JPanel());
+        scrollPane.getCorner(JScrollPane.UPPER_RIGHT_CORNER).setBackground(ThemeManager.getInstance().getContainerColor());
     }
 
     private void applyTheme(boolean isDark) {
         Color foreground = ThemeManager.getInstance().getForegroundColor();
         header.setForeground(foreground);
         subheader.setForeground(foreground);
-        darkBackdrop.setBackground(ThemeManager.getInstance().getContainerColor());
 
-        // In the future, you could also update the AlbumCardPanel text colors here
+        Color backdropColor = ThemeManager.getInstance().getContainerColor();
+        darkBackdrop.setBackground(backdropColor);
+
+        // Ensure the scroll pane viewport matches the backdrop color
+        if (scrollPane != null && scrollPane.getViewport() != null) {
+            scrollPane.getViewport().setBackground(backdropColor);
+        }
+
+        // Repaint to reflect color changes
         darkBackdrop.repaint();
     }
 
     @Override
     public void onThemeChanged(boolean isDarkMode) {
         applyTheme(isDarkMode);
+        applyScrollBarTheme(); // ✅ UPDATE SCROLLBAR ON THEME CHANGE
     }
 
     @Override

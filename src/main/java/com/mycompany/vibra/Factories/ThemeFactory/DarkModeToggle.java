@@ -34,16 +34,18 @@ public class DarkModeToggle extends JPanel {
         boolean isDarkMode = ThemeManager.getInstance().isDarkMode();
 
         if (isDarkMode) {
-            iconFactory = new DarkModeIconFactory();
-        } else {
+
             iconFactory = new LightModeIconFactory();
+        } else {
+
+            iconFactory = new DarkModeIconFactory();
         }
-        toggleButton.setIcon(iconFactory.createIcon("theme_button"));
+        toggleButton.setIcon(iconFactory.createIcon("theme_button")); // Assuming "theme_button" returns the moon or sun icon
+
 
         toggleButton.setToolTipText(isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode");
         toggleButton.setText(null);
-        toggleButton.setBackground(ThemeManager.getInstance().getMusicPanelColor());
-        toggleButton.setForeground(ThemeManager.getInstance().getForegroundColor());
+
         toggleButton.setOpaque(false);
         toggleButton.setContentAreaFilled(false);
         toggleButton.setBorderPainted(false);

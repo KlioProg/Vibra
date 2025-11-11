@@ -8,6 +8,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 // --- MERGED IMPORTS ---
 import java.util.Map;
 import java.util.List;
+
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.*;
 import com.mycompany.vibra.musicUtilities.Track;
 import com.mycompany.vibra.musicUtilities.TrackLoader;
 import java.awt.event.MouseAdapter;
@@ -16,10 +18,6 @@ import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
-import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
-import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
-import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
-import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedIconButtonFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedPanelFactory;
 import com.mycompany.vibra.model.Observer;
@@ -45,6 +43,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private final TrackService trackService; // From Final-Vibra
     private JPanel playlistItemsContainer;
     private IconFactory themeIcons; // From HEAD
+    private IconFactory buttonIcons; // From HEAD
     private final PlaylistDao playlistDao;
     private final PlaylistSongDao playlistSongDao;
     private final int currentUserID;
@@ -64,9 +63,10 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         this.playlistDao = new PlaylistDao();
         this.playlistSongDao = new PlaylistSongDao();
         this.currentUserID = currentUserID;
-        
+
         // Initialize theme icons (from HEAD)
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
+        this.buttonIcons = new CommonIconFactory();
 
         setLayout(new BorderLayout());
         initUI();
@@ -114,7 +114,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         playlistItemsContainer.add(yourLibraryLabel);
 
         playlistItemsContainer.add(Box.createVerticalStrut(12));
-        
+
         // --- USING FRIEND'S "CREATE PLAYLIST" BUTTON ---
         playlistItemsContainer.add(createCreatePlaylistButton()); // From HEAD
 
@@ -141,14 +141,14 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         JPanel newItem = createPlaylistItem(playlist);
 
         // Remove the glue from the bottom
-        playlistItemsContainer.remove(playlistItemsContainer.getComponentCount() - 1); 
-        
+        playlistItemsContainer.remove(playlistItemsContainer.getComponentCount() - 1);
+
         // Add the new item and spacing
         playlistItemsContainer.add(newItem);
         playlistItemsContainer.add(Box.createVerticalStrut(15));
-        
+
         // Add the glue back to the bottom
-        playlistItemsContainer.add(Box.createVerticalGlue()); 
+        playlistItemsContainer.add(Box.createVerticalGlue());
 
         playlistItemsContainer.revalidate();
         playlistItemsContainer.repaint();
@@ -162,23 +162,22 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         try {
             // Use the DAO and the ID we saved
             List<Playlist> userPlaylists = playlistDao.getUserPlaylists(this.currentUserID);
-            
+
             // Add each playlist to the view
             for (Playlist playlist : userPlaylists) {
                 addPlaylistToView(playlist);
             }
-            
+
         } catch (SQLException e) {
             e.printStackTrace();
             // Show a friendly error to the user
-            JOptionPane.showMessageDialog(this, 
-                "Error loading playlists from database.", 
-                "Database Error", 
+            JOptionPane.showMessageDialog(this,
+                "Error loading playlists from database.",
+                "Database Error",
                 JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // --- USING FRIEND'S ADVANCED 'createPlaylistItem' (from HEAD) ---
     private JPanel createPlaylistItem(final Playlist playlist) {
         ThemeManager tm = ThemeManager.getInstance();
         Color baseColor = tm.getSidebarColor();
@@ -193,6 +192,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         itemPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        // --- COVER IMAGE ---
         Image scaledImg = playlist.getCover().getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
         final JLabel artLabel = new JLabel(new ImageIcon(scaledImg));
         artLabel.setOpaque(false);
@@ -204,6 +204,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         coverClipper.add(artLabel, BorderLayout.CENTER);
         itemPanel.add(coverClipper, BorderLayout.WEST);
 
+        // --- TEXT INFO ---
         JPanel textPanel = new JPanel();
         textPanel.setOpaque(false);
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -211,12 +212,12 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         final JLabel nameLabel = new JLabel(playlist.getText());
         nameLabel.setFont(fontFactory.createFont("dunbartall_bold", 14));
         nameLabel.setForeground(tm.getForegroundColor());
-        nameLabel.setName("PLAYLIST_NAME_LABEL"); 
+        nameLabel.setName("PLAYLIST_NAME_LABEL");
 
         final JLabel bioLabel = new JLabel(playlist.getBio());
         bioLabel.setFont(fontFactory.createFont("dunbartall_book", 12));
         bioLabel.setForeground(tm.isDarkMode() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
-        bioLabel.setName("PLAYLIST_BIO_LABEL"); 
+        bioLabel.setName("PLAYLIST_BIO_LABEL");
 
         textPanel.add(nameLabel);
         textPanel.add(Box.createVerticalStrut(4));
@@ -224,45 +225,77 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         textPanel.add(Box.createVerticalGlue());
         itemPanel.add(textPanel, BorderLayout.CENTER);
 
-        ImageIcon editIcon = themeIcons.createIcon("edit");
+        ImageIcon normalEditIcon = themeIcons.createIcon("edit");       // From Light or Dark factory
+        ImageIcon hoverEditIcon = buttonIcons.createIcon("edit_hover"); // Always white hover
+
         JButton editButton = RoundedIconButtonFactory.createIconButton(
-                editIcon, null, 34, "Edit Playlist"
+                normalEditIcon, null, 34, "Edit Playlist"
         );
         editButton.setName("EDIT_PLAYLIST_BUTTON");
+        editButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         itemPanel.add(editButton, BorderLayout.EAST);
 
-        itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+        // --- HOVER FOR EDIT BUTTON ---
+        editButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                itemPanel.setBackgroundColor(hoverColor);
-                nameLabel.setForeground(Color.WHITE);
-                bioLabel.setForeground(Color.WHITE);
+            public void mouseEntered(MouseEvent e) {
+                editButton.setIcon(hoverEditIcon); // Always white
             }
 
             @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                ThemeManager tm = ThemeManager.getInstance();
-                itemPanel.setBackgroundColor(tm.getSidebarColor());
-                nameLabel.setForeground(tm.getForegroundColor());
-                bioLabel.setForeground(tm.isDarkMode() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+            public void mouseExited(MouseEvent e) {
+                // Fix: only reset if not still hovering the itemPanel
+                SwingUtilities.invokeLater(() -> {
+                    Point p = MouseInfo.getPointerInfo().getLocation();
+                    SwingUtilities.convertPointFromScreen(p, itemPanel);
+                    if (!itemPanel.contains(p)) {
+                        editButton.setIcon(themeIcons.createIcon("edit")); // Reset to theme-based icon
+                    }
+                });
             }
         });
 
-        itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+// --- ITEM HOVER EFFECT ---
+        itemPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                // Check if the click was on the edit button
+            public void mouseEntered(MouseEvent e) {
+                itemPanel.setBackgroundColor(hoverColor);
+                nameLabel.setForeground(Color.WHITE);
+                bioLabel.setForeground(Color.WHITE);
+                editButton.setIcon(hoverEditIcon); // Make icon white when hovering item
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    Point p = MouseInfo.getPointerInfo().getLocation();
+                    SwingUtilities.convertPointFromScreen(p, itemPanel);
+
+                    // Only reset if mouse completely leaves the playlist item (not hovering button)
+                    if (!itemPanel.contains(p)) {
+                        ThemeManager tm = ThemeManager.getInstance();
+                        itemPanel.setBackgroundColor(tm.getSidebarColor());
+                        nameLabel.setForeground(tm.getForegroundColor());
+                        bioLabel.setForeground(tm.isDarkMode() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+                        editButton.setIcon(themeIcons.createIcon("edit")); // Reset to proper themed icon
+                    }
+                });
+            }
+        });
+
+        // --- CLICK: LOAD PLAYLIST ---
+        itemPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Ignore clicks on edit button
                 if (e.getSource() == editButton || SwingUtilities.isDescendingFrom(e.getComponent(), editButton)) {
                     return;
                 }
 
                 System.out.println("Clicked to load playlist: " + playlist.getText());
-
                 try {
                     List<Track> tracks = playlistSongDao.getSongsForPlaylist(playlist.getPlaylistId());
-
                     trackListPanel.loadTracksForPlaylist(playlist, tracks);
-
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(itemPanel,
@@ -273,6 +306,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
             }
         });
 
+        // --- EDIT FUNCTIONALITY ---
         editButton.addActionListener(e -> {
             CreatePlaylistPanel createPanel = new CreatePlaylistPanel(
                     playlist.getText(), playlist.getBio(), playlist.getCover()
@@ -287,28 +321,21 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
             dialog.setLocationRelativeTo(itemPanel);
             dialog.setVisible(true);
 
-            // --- MODIFIED: Database Call ---
             if (createPanel.isPlaylistCreated()) {
-                // Get new values from the dialog
                 String newName = createPanel.getPlaylistName();
                 String newBio = createPanel.getPlaylistBio();
                 ImageIcon newCover = createPanel.getPlaylistCover();
-                
+
                 try {
-                    // 1. Convert ImageIcon to byte[] for the database
                     byte[] newCoverBytes = ImageUtils.convertImageIconToBytes(newCover);
-                    
-                    // 2. Call the DAO to update the database
                     boolean success = playlistDao.updatePlaylist(
-                        playlist.getPlaylistId(), // The ID of the playlist we're editing
-                        newName, 
-                        newBio, 
-                        newCoverBytes
+                            playlist.getPlaylistId(),
+                            newName,
+                            newBio,
+                            newCoverBytes
                     );
 
-                    // 3. If successful, update the local model object.
                     if (success) {
-                        // The observer will then automatically update the UI.
                         playlist.setText(newName);
                         playlist.setBio(newBio);
                         playlist.setCover(newCover);
@@ -319,10 +346,10 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(dialog, "Error updating playlist in database.", "Database Error", JOptionPane.ERROR_MESSAGE);
                 }
-                // --- END MODIFIED ---
             }
         });
 
+        // --- OBSERVER (auto-refresh UI when playlist updates) ---
         Observer uiUpdater = new Observer() {
             @Override
             public void update() {
@@ -353,7 +380,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 if (tag.getTitle() != null) title = tag.getTitle();
                 if (tag.getArtist() != null) artist = tag.getArtist();
                 if (tag.getAlbum() != null) album = tag.getAlbum();
-                
+
                 String trackStr = tag.getTrack(); // e.g., "1/12" or "1"
                 if (trackStr != null && !trackStr.isEmpty()) {
                     try {
@@ -423,18 +450,18 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 String newName = createPanel.getPlaylistName();
                 String newBio = createPanel.getPlaylistBio();
                 ImageIcon newCover = createPanel.getPlaylistCover();
-                
+
                 // --- MODIFIED: Database Call ---
                 try {
                     // 1. Convert ImageIcon to byte[] for the database
                     byte[] coverBytes = ImageUtils.convertImageIconToBytes(newCover);
-                    
+
                     // 2. Call the DAO to create the playlist.
                     //    It returns the fully-formed Playlist object with the new ID.
                     Playlist newPlaylist = playlistDao.createPlaylist(
                         this.currentUserID, // Use the class field
-                        newName, 
-                        newBio, 
+                        newName,
+                        newBio,
                         coverBytes
                     );
 
@@ -445,7 +472,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                     } else {
                         JOptionPane.showMessageDialog(dialog, "Could not create playlist.", "Creation Failed", JOptionPane.WARNING_MESSAGE);
                     }
-                    
+
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(dialog, "Error saving playlist to database.", "Database Error", JOptionPane.ERROR_MESSAGE);
@@ -467,7 +494,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         @Override
         protected Map<String, List<Track>> doInBackground() throws Exception {
             System.out.println("ScanWorker: Starting scan...");
-            
+
             // 1. Use TrackLoader to get all tracks
             List<Track> foundTracks = TrackLoader.loadTracks(scanPath);
 
@@ -549,7 +576,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         }
 
         // 3. Apply the theme to the parent panel itself
-        applyTheme(); 
+        applyTheme();
 
         // 4. Repaint everything
         revalidate();

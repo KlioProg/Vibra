@@ -9,6 +9,7 @@ public class CommonIconFactory extends IconFactory{
 
             case "error" -> createIcon("/images/Error.png", 25, 25);
             case "handler" -> createIcon("/icons/ErrorHandling.png", 200, 200);
+            case "edit_hover" -> createIcon("/icons/edit_white.png", 34, 34);
 
 
             default -> {

@@ -17,6 +17,8 @@ public class DarkModeIconFactory extends IconFactory {
             case "like" -> createIcon("/images/like_button.png", 28, 28);
             case "album_cover" -> createIcon("/icons/library_white.png", 28, 28);
 
+            case "playlist_default" -> createIcon("/images/default_cover.png", 190, 190);
+
             //hover dark-mode icons
             case "album_cover_hover" -> createIcon("/icons/library_dark.png", 28, 28);
             case "heart_hover" -> createIcon("/icons/heart_dark.png", 28, 28);
