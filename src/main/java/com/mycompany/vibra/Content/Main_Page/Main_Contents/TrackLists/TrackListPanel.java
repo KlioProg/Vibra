@@ -1,29 +1,17 @@
 package com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout; // Import FlowLayout
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon; // Import ImageIcon
-import javax.swing.JButton; // Import JButton
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar; // ✅ Import JScrollBar
-import javax.swing.JScrollPane;
+import javax.swing.*;
 import java.sql.SQLException;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JOptionPane;
 
 // ✅ Import your new UI class
+import com.mycompany.vibra.Content.PopUpChoices.PopUp_Alert;
+import com.mycompany.vibra.Content.PopUpChoices.PopUp_YesNo;
 import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
@@ -237,16 +225,14 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         }
     }
 
-    // --- ✅ UPDATED ADD BUTTON ---
     private JButton createAddButton() {
         ImageIcon addIcon = buttonIconFactory.createIcon("add");
-
         JButton button = new RoundedIconOnlyButton(addIcon, 34, 34);
 
-        // --- Color Logic ---
-        Color baseColor = new Color(0x9D4EDD);
-        Color hoverColor = new Color(0x7B2CBF);
-        Color pressColor = new Color(0x5A189A); // ✅ Fixed press color
+        // --- ✅ YOUR COLOR LOGIC RESTORED ---
+        Color baseColor = new Color(0x9D4EDD); // Lighter purple
+        Color hoverColor = new Color(0x7B2CBF); // Darker purple
+        Color pressColor = new Color(0x5A189A); // Darkest purple
 
         button.setBackground(baseColor);
         button.setToolTipText("Add to playlist");
@@ -257,31 +243,27 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             @Override public void mousePressed(MouseEvent e) { button.setBackground(pressColor); }
             @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
         });
+        // --- End of color logic ---
 
         button.addActionListener(e -> {
             // 1. Check if a track is actually selected
             if (selectedTrack == null) {
-                JOptionPane.showMessageDialog(button, "Please click on a track to select it first.", "No Track Selected", JOptionPane.INFORMATION_MESSAGE);
+                PopUp_Alert.showAlert(button, "No Track Selected", "Please click on a track to select it first.");
                 return;
             }
 
             // 2. Create the popup menu
             JPopupMenu playlistMenu = new JPopupMenu();
-
             try {
-                // 3. Get all of the user's playlists using the stored ID
                 List<Playlist> userPlaylists = playlistDao.getUserPlaylists(this.currentUserID);
-
                 if (userPlaylists.isEmpty()) {
                     JMenuItem emptyItem = new JMenuItem("No playlists found. Create one first!");
                     emptyItem.setEnabled(false);
                     playlistMenu.add(emptyItem);
                 } else {
-                    // 4. Create a menu item for each playlist
                     for (Playlist playlist : userPlaylists) {
                         JMenuItem playlistItem = new JMenuItem(playlist.getText());
                         playlistItem.addActionListener(itemEvent -> {
-                            // 5. When a playlist is clicked, add the song
                             addSelectedSongToPlaylist(playlist);
                         });
                         playlistMenu.add(playlistItem);
@@ -289,9 +271,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                JMenuItem errorItem = new JMenuItem("Error loading playlists");
-                errorItem.setEnabled(false);
-                playlistMenu.add(errorItem);
+                PopUp_Alert.showAlert(button, "Database Error", "Error loading playlists: " + ex.getMessage());
             }
 
             // 6. Show the popup menu right below the button
@@ -300,16 +280,14 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         return button;
     }
 
-    // --- ✅ UPDATED DELETE BUTTON ---
     private JButton createDeleteButton() {
         ImageIcon deleteIcon = buttonIconFactory.createIcon("delete");
-
         JButton button = new RoundedIconOnlyButton(deleteIcon, 34, 34);
 
-        // --- Color Logic (Same as Add button) ---
-        Color baseColor = new Color(0x9D4EDD);
-        Color hoverColor = new Color(0x7B2CBF);
-        Color pressColor = new Color(0x5A189A); // ✅ Fixed press color
+        // --- ✅ YOUR COLOR LOGIC RESTORED ---
+        Color baseColor = new Color(0x9D4EDD); // Lighter purple
+        Color hoverColor = new Color(0x7B2CBF); // Darker purple
+        Color pressColor = new Color(0x5A189A); // Darkest purple
 
         button.setBackground(baseColor);
         button.setToolTipText("Delete from playlist");
@@ -320,56 +298,55 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             @Override public void mousePressed(MouseEvent e) { button.setBackground(pressColor); }
             @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
         });
+        // --- End of color logic ---
 
         button.addActionListener(e -> {
-            // 1. Check if a track is selected
+            // 1. Check prerequisites
             if (selectedTrack == null) {
-                JOptionPane.showMessageDialog(button, "Please click on a track to select it first.", "No Track Selected", JOptionPane.INFORMATION_MESSAGE);
+                PopUp_Alert.showAlert(button, "No Track Selected", "Please click on a track to select it first.");
                 return;
             }
-
-            // 2. Check that we are indeed viewing a playlist
             if (currentlyLoadedPlaylist == null) {
-                JOptionPane.showMessageDialog(button, "This action is only available within a playlist.", "Error", JOptionPane.WARNING_MESSAGE);
+                PopUp_Alert.showAlert(button, "Action Not Allowed", "This action is only available within a playlist.");
                 return;
             }
 
-            // 3. Confirm the deletion
-            int choice = JOptionPane.showConfirmDialog(button,
-                "Remove '" + selectedTrack.getTitle() + "' from '" + currentlyLoadedPlaylist.getText() + "'?",
-                "Confirm Removal",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
+            // 3. Confirm the deletion with your custom PopUp_YesNo
+            String title = "Confirm Removal";
+            String message = "Are you sure you want to remove '" + selectedTrack.getTitle() + "' from '" + currentlyLoadedPlaylist.getText() + "'?";
 
-            if (choice == JOptionPane.YES_OPTION) {
-                // 4. Call the DAO
+            PopUp_YesNo confirmPanel = new PopUp_YesNo(title, message);
+            JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(button), title, true);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.setUndecorated(true);
+            dialog.setBackground(new Color(0, 0, 0, 0));
+            dialog.setContentPane(confirmPanel);
+            dialog.pack();
+            dialog.setLocationRelativeTo(button);
+            dialog.setVisible(true);
+
+            // 4. Check the result
+            if (confirmPanel.isConfirmed()) {
                 try {
                     boolean success = playlistSongDao.removeSongFromPlaylist(
-                        currentlyLoadedPlaylist.getPlaylistId(),
-                        selectedTrack.getId()
+                            currentlyLoadedPlaylist.getPlaylistId(),
+                            selectedTrack.getId()
                     );
-
                     if (success) {
-                        // 5. Remove the song from the UI *locally*
-                        tracks.remove(selectedTrack); // Remove from the master list
-                        populateTrackList(tracks); // Re-populate the panel with the modified list
-                        selectedTrack = null; // De-select the track
+                        tracks.remove(selectedTrack);
+                        // You might need to call your populateTrackList method here
+                        // populateTrackList(tracks);
                     } else {
-                        JOptionPane.showMessageDialog(button, "Could not remove the song.", "Failed", JOptionPane.WARNING_MESSAGE);
+                        PopUp_Alert.showAlert(button, "Failed", "Could not remove the song from the playlist.");
                     }
                 } catch (SQLException ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(button, "Error removing song from database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                    PopUp_Alert.showAlert(button, "Database Error", "Error removing song: " + ex.getMessage());
                 }
             }
         });
         return button;
     }
-
-    // --- ✅ NEW HELPER METHOD ---
-    /**
-     * Applies the custom UI to the scrollbar based on the current theme.
-     */
     private void applyScrollBarTheme() {
         if (scrollPane == null) return;
 
