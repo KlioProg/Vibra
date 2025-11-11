@@ -12,27 +12,30 @@ public class Track {
     private final String album;
     private final String filePath;
     private final int duration; // in seconds
+    private final int trackNumber;
     private final byte[] albumArt; // optional cover art
 
     // Constructor for file scanning
-    public Track(String title, String artist, String album, String filePath, int duration, byte[] albumArt) {
+    public Track(String title, String artist, String album, String filePath, int duration, int trackNumber, byte[] albumArt) {
         this.title = cleanTitle(title);
         this.artist = artist;
         this.album = album;
         this.filePath = filePath;
         this.duration = duration;
+        this.trackNumber = trackNumber;
         this.albumArt = albumArt;
         this.id = -1;
     }
 
     // Constructor for database loading
-    public Track(int id, String title, String artist, String album, String filePath, int duration, byte[] albumArt) {
+    public Track(int id, String title, String artist, String album, String filePath, int duration, int trackNumber, byte[] albumArt) {
         this.id = id;
         this.title = cleanTitle(title);
         this.artist = artist;
         this.album = album;
         this.filePath = filePath;
         this.duration = duration;
+        this.trackNumber = trackNumber;
         this.albumArt = albumArt;
         
     }
@@ -49,6 +52,7 @@ public class Track {
         int secs = duration % 60;
         return String.format("%d:%02d", mins, secs);
     }
+    public int getTrackNumber() { return trackNumber; }
     public long getDurationMs() { return duration * 1000L; } // in milliseconds
     public byte[] getAlbumArt() { return albumArt; }
 

@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.util.List;
+import com.mycompany.vibra.musicUtilities.Track;
 
 public class AlbumCardPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
@@ -21,7 +23,7 @@ public class AlbumCardPanel extends JPanel implements ThemeManager.ThemeChangerL
     private JLabel countLabel;
     private Color hoverBackgroundColor;
 
-    public AlbumCardPanel(ImageIcon albumArt, String title, String songCount) {
+    public AlbumCardPanel(ImageIcon albumArt, String title, List<Track> tracks) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -53,7 +55,7 @@ public class AlbumCardPanel extends JPanel implements ThemeManager.ThemeChangerL
         titleLabel.setFont(fontFactory.createFont("dunbartall_bold", 16));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        countLabel = new JLabel(songCount);
+        countLabel = new JLabel(tracks.size() + " songs");
         countLabel.setFont(fontFactory.createFont("dunbartall_book", 14));
         countLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -64,27 +66,6 @@ public class AlbumCardPanel extends JPanel implements ThemeManager.ThemeChangerL
 
         add(artLabel);
         add(infoPanel);
-
-        // --- Interactivity ---
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                isHovered = true;
-                repaint();
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                isHovered = false;
-                repaint();
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("Clicked on album: " + title);
-                // Future logic: switch to a detailed view of this album
-            }
-        });
 
         applyTheme(ThemeManager.getInstance().isDarkMode());
     }

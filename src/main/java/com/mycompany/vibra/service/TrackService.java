@@ -20,7 +20,7 @@ public class TrackService {
     // REPLACE your entire addTrackIfMissing method with this
     public boolean addTrackIfMissing(Track track) {
         String sqlCheck = "SELECT id FROM tracks WHERE file_path = ?";
-        String sqlInsert = "INSERT INTO tracks (title, artist, album, file_path, duration_sec, album_art) VALUES(?,?,?,?,?,?)";
+        String sqlInsert = "INSERT INTO tracks (title, artist, album, file_path, duration_sec, track_number, album_art) VALUES(?,?,?,?,?,?,?)";
 
         try (Connection conn = Database.getConnection()) {
             
@@ -43,7 +43,8 @@ public class TrackService {
                 pstmtInsert.setString(3, track.getAlbum());
                 pstmtInsert.setString(4, track.getFilePath());
                 pstmtInsert.setInt(5, track.getDuration());
-                pstmtInsert.setBytes(6, track.getAlbumArt());
+                pstmtInsert.setInt(6, track.getTrackNumber());
+                pstmtInsert.setBytes(7, track.getAlbumArt());
                 pstmtInsert.executeUpdate();
 
                 // --- THIS IS THE FIX ---
@@ -86,6 +87,7 @@ public class TrackService {
                         rs.getString("album"),
                         rs.getString("file_path"),
                         rs.getInt("duration_sec"),
+                        rs.getInt("track_number"),
                         rs.getBytes("album_art")
                 );
                 allTracks.add(track);

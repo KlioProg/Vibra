@@ -5,6 +5,14 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import java.util.Map;
+import java.util.List;
+import com.mycompany.vibra.musicUtilities.Track;
+import com.mycompany.vibra.musicUtilities.TrackLoader;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
@@ -14,16 +22,20 @@ import com.mycompany.vibra.service.TrackService;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.Track;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Album_Panel.AlbumPanel;
 // This is the CRUCIAL import
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
     private final MusicPlayerPanel musicPlayerPanel;
     private final TrackListPanel trackListPanel;
+    private final AlbumPanel albumPanel;
     private final TrackService trackService;
     private JPanel playlistItemsContainer;
 
@@ -33,9 +45,10 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private JLabel yourLibraryLabel;
     FontFactory fontFactory = new DunbarFactory();
 
-    public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel) {
+    public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel, AlbumPanel albumPanel) {
         this.musicPlayerPanel = musicPlayerPanel;
         this.trackListPanel = trackListPanel; // Store the reference
+        this.albumPanel = albumPanel;
         this.trackService = new TrackService();
 
         setLayout(new BorderLayout());
@@ -44,6 +57,10 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         // register for theme updates
         ThemeManager.getInstance().addThemeChangerListener(this);
         applyTheme();
+
+        String hardcodedScanPath = "/Users/eeeuweee/Music/vibramusic";
+
+        new ScanWorker(hardcodedScanPath).execute();
     }
 
     // Your UI code, unchanged
@@ -66,10 +83,6 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 //        albumLabel.setFont(FontLoaderFactory.loadFont("/fonts/DunbarTall-Bold.ttf", 36));
         albumLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
         topPanel.add(albumLabel);
-        topPanel.add(Box.createHorizontalStrut(10));
-        topPanel.add(createUploadButton());
-        topPanel.add(Box.createHorizontalStrut(6));
-        topPanel.add(createOpenFolderButton());
 
         // Add topPanel to the NORTH of libraryPanel
         libraryPanel.add(topPanel, BorderLayout.NORTH);
@@ -181,6 +194,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
             String artist = "Unknown Artist";
             String album = "Unknown Album";
             int duration = (int) mp3.getLengthInSeconds();
+            int trackNum = 0;
             byte[] albumArt = null;
 
             if (mp3.hasId3v2Tag()) {
@@ -188,10 +202,20 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 if (tag.getTitle() != null) title = tag.getTitle();
                 if (tag.getArtist() != null) artist = tag.getArtist();
                 if (tag.getAlbum() != null) album = tag.getAlbum();
+                String trackStr = tag.getTrack(); // e.g., "1/12" or "1"
+                if (trackStr != null && !trackStr.isEmpty()) {
+                    try {
+                        // Get the part before any "/"
+                        String numberOnly = trackStr.split("/")[0];
+                        trackNum = Integer.parseInt(numberOnly);
+                    } catch (NumberFormatException e) {
+                        // The tag was weird, just ignore it and use 0
+                    }
+                }
                 if (tag.getAlbumImage() != null) albumArt = tag.getAlbumImage();
             }
 
-            return new Track(title, artist, album, file.getAbsolutePath(), duration, albumArt);
+            return new Track(title, artist, album, file.getAbsolutePath(), duration, trackNum, albumArt);
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -229,84 +253,6 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    // UPDATED Upload Button
-    private RoundedButtonFactory createUploadButton() {
-        RoundedButtonFactory button = createStyledButton("Upload");
-
-        button.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Select MP3 Files");
-            fileChooser.setMultiSelectionEnabled(true);
-            fileChooser.setFileFilter(new FileNameExtensionFilter("MP3 Files", "mp3"));
-
-            int result = fileChooser.showOpenDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                List<Track> loadedTracks = new ArrayList<>();
-                for (File selectedFile : fileChooser.getSelectedFiles()) {
-                    Track track = extractTrackFromFile(selectedFile);
-                    if (track != null) {
-                        trackService.addTrackIfMissing(track);
-                        System.out.println("Uploaded track: " + track.getTitle() + " | New ID: " + track.getId());
-                        loadedTracks.add(track);
-                    }
-                }
-
-                // Make sure we actually loaded tracks
-                if (!loadedTracks.isEmpty()) {
-
-                    //It loads the list into the panel
-                    if (trackListPanel != null) {
-                        trackListPanel.loadTracksIntoPanel(loadedTracks);
-                    }
-
-                    // It plays the FIRST track
-                    if (musicPlayerPanel != null) {
-                        // We get the first track from the list we just made
-                        musicPlayerPanel.loadTrack(loadedTracks.get(0));
-                    }
-                }
-            }
-        });
-
-        return button;
-    }
-
-    // Open Folder Button
-    private RoundedButtonFactory createOpenFolderButton() {
-        RoundedButtonFactory button = createStyledButton("Open Folder");
-
-        button.addActionListener(e -> {
-            JFileChooser folderChooser = new JFileChooser();
-            folderChooser.setDialogTitle("Select Music Folder");
-            folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
-            int result = folderChooser.showOpenDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File folder = folderChooser.getSelectedFile();
-                File[] mp3Files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".mp3"));
-
-                if (mp3Files != null) {
-                    List<Track> tracks = new ArrayList<>();
-                    for (File file : mp3Files) {
-                        Track track = extractTrackFromFile(file);
-                        if (track != null) {
-                            trackService.addTrackIfMissing(track);
-                            System.out.println("Opened track: " + track.getTitle() + " | New ID: " + track.getId());
-                            tracks.add(track);
-                        }
-                    }
-
-                    // Send the new list to the TrackListPanel
-                    if (!tracks.isEmpty() && trackListPanel != null) {
-                        trackListPanel.loadTracksIntoPanel(tracks);
-                    }
-                }
-            }
-        });
-
-        return button;
-    }
-
     // Your playlist button code, unchanged
     private RoundedButtonFactory createPlaylistButton() {
         RoundedButtonFactory button = createStyledButton("Playlist");
@@ -315,6 +261,56 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         });
         return button;
     }
+
+    // --- ADD THIS ENTIRE INNER CLASS ---
+    
+    /**
+     * A background task to scan a directory for .mp3 files
+     * without freezing the application UI.
+     */
+    private class ScanWorker extends SwingWorker<Map<String, List<Track>>, Void> {
+        private final String scanPath;
+
+        /**
+         * Creates a new worker that will scan the specified path.
+         * @param path The absolute file path to scan (e.g., "/Users/You/Music/MyFolder")
+         */
+        public ScanWorker(String path) {
+            this.scanPath = path;
+        }
+
+        @Override
+        protected Map<String, List<Track>> doInBackground() throws Exception {
+            System.out.println("ScanWorker: Starting scan...");
+
+            // 1. Use your new loader to get all tracks
+            List<Track> foundTracks = TrackLoader.loadTracks(scanPath);
+
+            // 2. Save each track to the database (this updates their IDs)
+            for (Track track : foundTracks) {
+                trackService.addTrackIfMissing(track);
+            }
+
+            // 3. Group the tracks by album
+            Map<String, List<Track>> albums = foundTracks.stream()
+                .collect(Collectors.groupingBy(Track::getAlbum));
+
+            return albums;
+        }
+
+        @Override
+        protected void done() {
+            try {
+                Map<String, List<Track>> albums = get();
+
+                albumPanel.displayRealAlbums(albums);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    // --- END OF SCANWORKER CLASS ---
 
     // Your theme code, unchanged
     private void applyTheme() {

@@ -42,6 +42,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     private MainLibraryPanel mainLibraryPanel;
     private AudioPlayer audioPlayer;
     private Playlist mainPlaylist;
+    private AlbumPanel albumPanelInstance;
 
     private final int currentUserID;
 
@@ -78,6 +79,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
 
         // --- 1. Instantiate all shared components ---
         likedPanelInstance = new LikedPanel(this.currentUserID);
+        albumPanelInstance = new AlbumPanel();
         audioPlayer = new AudioPlayer();
         mainPlaylist = new Playlist(1, "My Playlist", this.currentUserID); 
 
@@ -133,13 +135,15 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         
         // This is the correct way to init TrackListPanel (no args)
         trackListPanel = new TrackListPanel(); 
-        mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel);
+        mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel, albumPanelInstance);
         
         // --- 5. Inject dependencies ---
         // This gives LikedPanel and TrackListPanel a reference to the player
         // so click-to-play works.
         likedPanelInstance.setMusicPlayerPanel(musicPlayerPanel);
         trackListPanel.setMusicPlayerPanel(musicPlayerPanel);
+        albumPanelInstance.setTrackListPanel(trackListPanel);
+        
 
         // --- 6. Build the "MusicPlayer" card ---
         JPanel musicPlayerCard = new JPanel(new BorderLayout());
@@ -155,7 +159,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         // --- 7. Add cards to the contentPanel (the one with CardLayout) ---
         contentPanel.add(musicPlayerCard, "MusicPlayer"); // Card 1
         contentPanel.add(likedPanelInstance, "Liked");    // Card 2
-        contentPanel.add(new AlbumPanel(), "Album");       // Card 3 (from your friend)
+        contentPanel.add(albumPanelInstance, "Album");       // Card 3 (from your friend)
 
         // --- 8. Add the swappable contentPanel to the main area ---
         mainContentArea.add(contentPanel, BorderLayout.CENTER);
