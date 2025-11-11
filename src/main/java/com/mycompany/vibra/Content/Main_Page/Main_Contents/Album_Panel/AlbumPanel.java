@@ -3,14 +3,26 @@ package com.mycompany.vibra.Content.Main_Page.Main_Contents.Album_Panel;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedBackdropFactory;
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 import com.mycompany.vibra.Factories.Common_UI.GradientPainter;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.util.Comparator;
+
+import java.util.List; // <-- ADD THIS
+import java.util.Map;
+import java.awt.event.MouseAdapter; // <-- ADD THIS
+import java.awt.event.MouseEvent; // <-- ADD THIS
+import com.mycompany.vibra.musicUtilities.Track; // <-- ADD THIS
+
 import java.awt.*;
 
 public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListener {
+
+    private TrackListPanel trackListPanel;
+    private JPanel gridPanel;
 
     // Design System for this panel
     private static final Color GRADIENT_COLOR_CENTER = new Color(0, 119, 255); // Bright Blue
@@ -25,6 +37,53 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
     private JLabel header;
     private JLabel subheader;
     private RoundedBackdropFactory darkBackdrop;
+
+    public void setTrackListPanel(TrackListPanel trackListPanel) {
+    this.trackListPanel = trackListPanel;
+}
+
+    public void displayRealAlbums(Map<String, List<Track>> albums) {
+        // 1. Clear any old data
+        gridPanel.removeAll();
+
+        // 2. Loop through the real album map
+        for (Map.Entry<String, List<Track>> entry : albums.entrySet()) {
+            String albumTitle = entry.getKey();
+            List<Track> tracksInAlbum = entry.getValue();
+
+            // 3. Get album art from the first track
+            ImageIcon albumArtIcon = null;
+            if (!tracksInAlbum.isEmpty()) {
+                Image art = tracksInAlbum.get(0).getAlbumArtImage();
+                if (art != null) {
+                    // Use the existing scaling logic from AlbumCardPanel
+                    albumArtIcon = new ImageIcon(art.getScaledInstance(150, 150, Image.SCALE_SMOOTH));
+                }
+            }
+
+            // 4. Create a new card (using the new constructor)
+            AlbumCardPanel card = new AlbumCardPanel(albumArtIcon, albumTitle, tracksInAlbum);
+
+            // 5. Add the click listener
+            card.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    System.out.println("Loading album: " + albumTitle);
+                    if (trackListPanel != null) {
+                        tracksInAlbum.sort(Comparator.comparingInt(Track::getTrackNumber));
+                        trackListPanel.loadTracksIntoPanel(tracksInAlbum);
+                    }
+                }
+            });
+
+            // 6. Add the new, real card to the grid
+            gridPanel.add(card);
+        }
+
+        // 7. Refresh the UI
+        gridPanel.revalidate();
+        gridPanel.repaint();
+    }
 
     public AlbumPanel() {
         setLayout(new BorderLayout());
@@ -56,23 +115,8 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         darkBackdrop.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // --- Album Grid ---
-        JPanel gridPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        gridPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         gridPanel.setOpaque(false);
-
-        // Add mock data using the new AlbumCardPanel
-        gridPanel.add(new AlbumCardPanel(
-                new ImageIcon(getClass().getResource("/images/gym.jpg")),
-                "Gym", "50 songs"
-        ));
-        gridPanel.add(new AlbumCardPanel(
-                new ImageIcon(getClass().getResource("/images/lofi.jpg")),
-                "Lofi Beats", "120 songs"
-        ));
-        gridPanel.add(new AlbumCardPanel(
-                new ImageIcon(getClass().getResource("/images/roadtrip.jpg")),
-                "Roadtrip", "88 songs"
-        ));
-
 
         // Use a scroll pane for the grid
         JScrollPane scrollPane = new JScrollPane(gridPanel);

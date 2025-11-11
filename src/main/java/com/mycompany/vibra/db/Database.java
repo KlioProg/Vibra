@@ -48,6 +48,7 @@ public final class Database {
                 " album TEXT NOT NULL, " +
                 " file_path TEXT UNIQUE NOT NULL," +
                 "  duration_sec INTEGER," +
+                " track_number INTEGER," +
                 " album_art BLOB" +
                 ");"
             );

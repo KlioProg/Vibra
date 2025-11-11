@@ -40,6 +40,7 @@ public class Mp3Utils {
         String artist = "Unknown";
         String album = "Unknown";
         int duration = 0;
+        int trackNum = 0;
         byte[] albumArt = null;
 
         try {
@@ -52,6 +53,15 @@ public class Mp3Utils {
                 ID3v2 tag = mp3file.getId3v2Tag();
                 if (tag.getTitle() != null && !tag.getTitle().isEmpty()) title = tag.getTitle();
                 if (tag.getArtist() != null && !tag.getArtist().isEmpty()) artist = tag.getArtist();
+                String trackStr = tag.getTrack(); // e.g., "1/12" or "1"
+                if (trackStr != null && !trackStr.isEmpty()) {
+                    try {
+                        String numberOnly = trackStr.split("/")[0]; // Get "1" from "1/12"
+                        trackNum = Integer.parseInt(numberOnly);
+                    } catch (NumberFormatException e) {
+                        // Tag was malformed, ignore it
+                    }
+                }
                 if (tag.getAlbum() != null && !tag.getAlbum().isEmpty()) album = tag.getAlbum();
 
                 // Album art
@@ -67,7 +77,7 @@ public class Mp3Utils {
             e.printStackTrace();
         }
 
-        return new Track(title, artist, album, filePath, duration, albumArt);
+        return new Track(title, artist, album, filePath, duration, trackNum, albumArt);
     }
 
     // ✅ Extract metadata for multiple files

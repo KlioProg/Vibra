@@ -148,7 +148,7 @@ public class createAccPanel extends JPanel {
 
                     if (user != null) {
                         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(createAccPanel.this);
-                        MainAppFrame mainFrame = new MainAppFrame();
+                        MainAppFrame mainFrame = new MainAppFrame(user.getId());
                         mainFrame.setVisible(true);
                         topFrame.dispose();
                     }

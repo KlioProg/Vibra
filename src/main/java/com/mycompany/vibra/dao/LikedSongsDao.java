@@ -73,6 +73,7 @@ public class LikedSongsDao {
                         rs.getString("album"),
                         rs.getString("file_path"),
                         rs.getInt("duration_sec"), 
+                        rs.getInt("track_number"),
                         rs.getBytes("album_art")));
                 }
                 return out;

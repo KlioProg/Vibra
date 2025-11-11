@@ -30,6 +30,7 @@ public class TrackLoader {
                     String artist = "Unknown Artist";
                     String album = "Unknown Album";
                     int duration = (int) mp3.getLengthInSeconds();
+                    int trackNum = 0;
                     byte[] albumArt = null;
 
                     if (mp3.hasId3v2Tag()) {
@@ -40,19 +41,28 @@ public class TrackLoader {
                         if (id3v2Tag.getArtist() != null && !id3v2Tag.getArtist().isEmpty()) {
                             artist = id3v2Tag.getArtist();
                         }
+                        String trackStr = id3v2Tag.getTrack(); // e.g., "1/12" or "1"
+                        if (trackStr != null && !trackStr.isEmpty()) {
+                            try {
+                                String numberOnly = trackStr.split("/")[0]; // Get "1" from "1/12"
+                                trackNum = Integer.parseInt(numberOnly);
+                            } catch (NumberFormatException e) {
+                                // Tag was malformed, ignore and use 0
+                            }
+                        }
                         if (id3v2Tag.getAlbum() != null && !id3v2Tag.getAlbum().isEmpty()) {
                             album = id3v2Tag.getAlbum();
                         }
                         albumArt = id3v2Tag.getAlbumImage();
                     }
 
-                    tracks.add(new Track(title, artist, album, file.getAbsolutePath(), duration, albumArt));
+                    tracks.add(new Track(title, artist, album, file.getAbsolutePath(), duration, trackNum, albumArt));
 
                 } catch (Exception e) {
                     System.out.println("⚠️ Error reading file: " + file.getName() + " -> " + e.getMessage());
                     // fallback Track with minimal info
                     String fallbackTitle = file.getName().substring(0, file.getName().lastIndexOf("."));
-                    tracks.add(new Track(fallbackTitle, "Unknown Artist", "Unknown Album", file.getAbsolutePath(), 0, null));
+                    tracks.add(new Track(fallbackTitle, "Unknown Artist", "Unknown Album", file.getAbsolutePath(), 0, 0, null));
                 }
             }
         } else {
