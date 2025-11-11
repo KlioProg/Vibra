@@ -26,9 +26,13 @@ import com.mycompany.vibra.model.Observer;
 import com.mycompany.vibra.model.Playlist;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
+import com.mycompany.vibra.dao.PlaylistDao;
+import com.mycompany.vibra.dao.PlaylistSongDao;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Album_Panel.AlbumPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
-import com.mycompany.vibra.service.TrackService; // From Final-Vibra
+import com.mycompany.vibra.service.TrackService; // From Final-Vibraimport com.mycompany.vibra.dao.PlaylistDao;
+import com.mycompany.vibra.Factories.Common_UI.ImageUtils;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -41,6 +45,9 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private final TrackService trackService; // From Final-Vibra
     private JPanel playlistItemsContainer;
     private IconFactory themeIcons; // From HEAD
+    private final PlaylistDao playlistDao;
+    private final PlaylistSongDao playlistSongDao;
+    private final int currentUserID;
 
     // Keep refs so we can update them on theme change
     private JPanel libraryPanel;
@@ -49,17 +56,22 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     FontFactory fontFactory = new DunbarFactory();
 
     // --- MERGED CONSTRUCTOR ---
-    public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel, AlbumPanel albumPanel) {
+    public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel, AlbumPanel albumPanel, int currentUserID) {
         this.musicPlayerPanel = musicPlayerPanel;
         this.trackListPanel = trackListPanel;
         this.albumPanel = albumPanel;
         this.trackService = new TrackService();
+        this.playlistDao = new PlaylistDao();
+        this.playlistSongDao = new PlaylistSongDao();
+        this.currentUserID = currentUserID;
         
         // Initialize theme icons (from HEAD)
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
 
         setLayout(new BorderLayout());
         initUI();
+
+        loadUserPlaylists();
 
         ThemeManager.getInstance().addThemeChangerListener(this);
         applyTheme(); // Apply theme after initUI
@@ -119,6 +131,51 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 
         libraryPanel.add(scrollPane, BorderLayout.CENTER);
         add(libraryPanel, BorderLayout.CENTER);
+    }
+
+    /**
+     * Helper method to add a single playlist panel to the container,
+     * correctly managing the "glue" component.
+     */
+    private void addPlaylistToView(Playlist playlist) {
+        JPanel newItem = createPlaylistItem(playlist);
+
+        // Remove the glue from the bottom
+        playlistItemsContainer.remove(playlistItemsContainer.getComponentCount() - 1); 
+        
+        // Add the new item and spacing
+        playlistItemsContainer.add(newItem);
+        playlistItemsContainer.add(Box.createVerticalStrut(15));
+        
+        // Add the glue back to the bottom
+        playlistItemsContainer.add(Box.createVerticalGlue()); 
+
+        playlistItemsContainer.revalidate();
+        playlistItemsContainer.repaint();
+    }
+
+    /**
+     * Loads all playlists for the current user from the database and
+     * adds them to the UI.
+     */
+    private void loadUserPlaylists() {
+        try {
+            // Use the DAO and the ID we saved
+            List<Playlist> userPlaylists = playlistDao.getUserPlaylists(this.currentUserID);
+            
+            // Add each playlist to the view
+            for (Playlist playlist : userPlaylists) {
+                addPlaylistToView(playlist);
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Show a friendly error to the user
+            JOptionPane.showMessageDialog(this, 
+                "Error loading playlists from database.", 
+                "Database Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // --- USING FRIEND'S ADVANCED 'createPlaylistItem' (from HEAD) ---
@@ -194,12 +251,25 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
+                // Check if the click was on the edit button
                 if (e.getSource() == editButton || SwingUtilities.isDescendingFrom(e.getComponent(), editButton)) {
                     return;
                 }
-                System.out.println("Clicked to play playlist: " + playlist.getText());
-                // TODO: Re-enable this when playlists hold tracks
-                // trackListPanel.loadTracksIntoPanel(playlist.getTracks());
+
+                System.out.println("Clicked to load playlist: " + playlist.getText());
+
+                try {
+                    List<Track> tracks = playlistSongDao.getSongsForPlaylist(playlist.getPlaylistId());
+
+                    trackListPanel.loadTracksForPlaylist(playlist, tracks);
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(itemPanel,
+                            "Error loading songs for playlist.",
+                            "Database Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -217,10 +287,39 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
             dialog.setLocationRelativeTo(itemPanel);
             dialog.setVisible(true);
 
+            // --- MODIFIED: Database Call ---
             if (createPanel.isPlaylistCreated()) {
-                playlist.setText(createPanel.getPlaylistName());
-                playlist.setBio(createPanel.getPlaylistBio());
-                playlist.setCover(createPanel.getPlaylistCover());
+                // Get new values from the dialog
+                String newName = createPanel.getPlaylistName();
+                String newBio = createPanel.getPlaylistBio();
+                ImageIcon newCover = createPanel.getPlaylistCover();
+                
+                try {
+                    // 1. Convert ImageIcon to byte[] for the database
+                    byte[] newCoverBytes = ImageUtils.convertImageIconToBytes(newCover);
+                    
+                    // 2. Call the DAO to update the database
+                    boolean success = playlistDao.updatePlaylist(
+                        playlist.getPlaylistId(), // The ID of the playlist we're editing
+                        newName, 
+                        newBio, 
+                        newCoverBytes
+                    );
+
+                    // 3. If successful, update the local model object.
+                    if (success) {
+                        // The observer will then automatically update the UI.
+                        playlist.setText(newName);
+                        playlist.setBio(newBio);
+                        playlist.setCover(newCover);
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, "Could not update playlist.", "Update Failed", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(dialog, "Error updating playlist in database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
+                // --- END MODIFIED ---
             }
         });
 
@@ -306,7 +405,6 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         return button;
     }
 
-    // --- USING FRIEND'S 'createCreatePlaylistButton' (from HEAD) ---
     private RoundedButtonFactory createCreatePlaylistButton() {
         RoundedButtonFactory button = createStyledButton("Create Playlist");
         button.addActionListener(e -> {
@@ -326,28 +424,33 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 String newBio = createPanel.getPlaylistBio();
                 ImageIcon newCover = createPanel.getPlaylistCover();
                 
-                // ‼️ NOTE: '1' and '0' are placeholders.
-                // You will need to get the real currentUserID from your MainCardPanel.
-                int currentUserId = 1; 
-                int newPlaylistId = 0; 
+                // --- MODIFIED: Database Call ---
+                try {
+                    // 1. Convert ImageIcon to byte[] for the database
+                    byte[] coverBytes = ImageUtils.convertImageIconToBytes(newCover);
+                    
+                    // 2. Call the DAO to create the playlist.
+                    //    It returns the fully-formed Playlist object with the new ID.
+                    Playlist newPlaylist = playlistDao.createPlaylist(
+                        this.currentUserID, // Use the class field
+                        newName, 
+                        newBio, 
+                        coverBytes
+                    );
 
-                Playlist newPlaylist = new Playlist(
-                        newPlaylistId,
-                        newName,
-                        newBio,
-                        newCover,
-                        currentUserId
-                );
-
-                JPanel newItem = createPlaylistItem(newPlaylist);
-
-                playlistItemsContainer.remove(playlistItemsContainer.getComponentCount() - 1); // Remove glue
-                playlistItemsContainer.add(newItem);
-                playlistItemsContainer.add(Box.createVerticalStrut(15));
-                playlistItemsContainer.add(Box.createVerticalGlue()); // Add glue back
-
-                playlistItemsContainer.revalidate();
-                playlistItemsContainer.repaint();
+                    // 3. If creation was successful, add it to the UI
+                    if (newPlaylist != null) {
+                        // Use our new helper method!
+                        addPlaylistToView(newPlaylist);
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, "Could not create playlist.", "Creation Failed", JOptionPane.WARNING_MESSAGE);
+                    }
+                    
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(dialog, "Error saving playlist to database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
+                // --- END MODIFIED ---
             }
         });
         return button;

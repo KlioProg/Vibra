@@ -18,11 +18,19 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar; // ✅ Import JScrollBar
 import javax.swing.JScrollPane;
+import java.sql.SQLException;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JOptionPane;
 
 // ✅ Import your new UI class
 import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
+import com.mycompany.vibra.dao.PlaylistDao;
+import com.mycompany.vibra.dao.PlaylistSongDao;
+import com.mycompany.vibra.model.Playlist;
+
 
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
@@ -52,13 +60,27 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
 
     private IconFactory buttonIconFactory = new ButtonIconFactory();
 
+    private final PlaylistDao playlistDao;
+    private final PlaylistSongDao playlistSongDao;
+    private Track selectedTrack;
+    private final int currentUserID;
 
-    public TrackListPanel() {
+    private JButton saveButton;
+    private JButton deleteButton;
+    private Playlist currentlyLoadedPlaylist;
+
+
+    public TrackListPanel(int currentUserID) {
+        this.currentUserID = currentUserID;
         setLayout(new BorderLayout());
         ThemeManager.getInstance().addThemeChangerListener(this);
 
         tracks = new ArrayList<>();
         trackListComponents = new ArrayList<>();
+
+        this.playlistDao = new PlaylistDao();
+        this.playlistSongDao = new PlaylistSongDao();
+        this.selectedTrack = null;
 
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
@@ -86,6 +108,9 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         // Using the new icon button methods
         JButton saveButton = createAddButton();
         JButton deleteButton = createDeleteButton();
+
+        this.saveButton = createAddButton();
+        this.deleteButton = createDeleteButton();
 
         buttonPanel.add(saveButton);
         buttonPanel.add(deleteButton);
@@ -122,8 +147,25 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         this.musicPlayerPanel = musicPlayerPanel;
     }
 
-    public void loadTracksIntoPanel(List<Track> newTracks) {
+    public void loadTracksForPlaylist(Playlist playlist, List<Track> newTracks) {
+        this.currentlyLoadedPlaylist = playlist; // Store the playlist
+        this.selectedTrack = null; // Clear selection
+        this.saveButton.setVisible(false); // Hide 'Add'
+        this.deleteButton.setVisible(true); // Show 'Delete'
+        
+        populateTrackList(newTracks); // Call the UI method
+    }
 
+    public void loadTracksIntoPanel(List<Track> newTracks) {
+        this.currentlyLoadedPlaylist = null; // No playlist context
+        this.selectedTrack = null; // Clear selection
+        this.saveButton.setVisible(true); // Show 'Add'
+        this.deleteButton.setVisible(false); // Hide 'Delete'
+        
+        populateTrackList(newTracks); // Call the UI method
+    }
+
+    private void populateTrackList(List<Track> newTracks) {
         // Keep the first 4 components (buttonPanel, strut, playLabel, strut)
         while (trackListContainer.getComponentCount() > 4) {
             trackListContainer.remove(4);
@@ -131,15 +173,26 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
 
         trackListComponents.clear();
         tracks.clear();
-        tracks.addAll(newTracks);
+        tracks.addAll(newTracks); // Add the new tracks to the class list
 
         // Remove VerticalGlue (it's the last component)
         trackListContainer.remove(trackListContainer.getComponentCount() - 1);
 
         int trackNum = 1;
-        for (Track track : tracks) {
+        // Use the 'newTracks' parameter here
+        for (Track track : newTracks) { 
 
             TrackList trackComponent = new TrackList(track, trackNum, this.musicPlayerPanel);
+
+            // Add listener to select track
+            trackComponent.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    selectedTrack = track;
+                    System.out.println("Selected track: " + selectedTrack.getTitle());
+                    // You could add a visual highlight here
+                }
+            });
 
             trackListComponents.add(trackComponent);
             trackListContainer.add(trackComponent);
@@ -151,6 +204,37 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
 
         trackListContainer.revalidate();
         trackListContainer.repaint();
+    }
+
+    private void addSelectedSongToPlaylist(Playlist playlist) {
+        if (selectedTrack == null) {
+            System.err.println("Add song called, but no track was selected.");
+            return;
+        }
+
+        try {
+            boolean success = playlistSongDao.addSongToPlaylist(playlist.getPlaylistId(), selectedTrack.getId());
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, 
+                    "'" + selectedTrack.getTitle() + "' added to '" + playlist.getText() + "'.",
+                    "Song Added", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                // This happens if the "INSERT OR IGNORE" finds a duplicate
+                JOptionPane.showMessageDialog(this, 
+                    "'" + selectedTrack.getTitle() + "' is already in '" + playlist.getText() + "'.",
+                    "Already Exists", 
+                    JOptionPane.WARNING_MESSAGE);
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, 
+                "Error adding song to playlist.", 
+                "Database Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // --- ✅ UPDATED ADD BUTTON ---
@@ -174,7 +258,45 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
         });
 
-        button.addActionListener(e -> System.out.println("Add to playlist button clicked!"));
+        button.addActionListener(e -> {
+            // 1. Check if a track is actually selected
+            if (selectedTrack == null) {
+                JOptionPane.showMessageDialog(button, "Please click on a track to select it first.", "No Track Selected", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // 2. Create the popup menu
+            JPopupMenu playlistMenu = new JPopupMenu();
+
+            try {
+                // 3. Get all of the user's playlists using the stored ID
+                List<Playlist> userPlaylists = playlistDao.getUserPlaylists(this.currentUserID);
+
+                if (userPlaylists.isEmpty()) {
+                    JMenuItem emptyItem = new JMenuItem("No playlists found. Create one first!");
+                    emptyItem.setEnabled(false);
+                    playlistMenu.add(emptyItem);
+                } else {
+                    // 4. Create a menu item for each playlist
+                    for (Playlist playlist : userPlaylists) {
+                        JMenuItem playlistItem = new JMenuItem(playlist.getText());
+                        playlistItem.addActionListener(itemEvent -> {
+                            // 5. When a playlist is clicked, add the song
+                            addSelectedSongToPlaylist(playlist);
+                        });
+                        playlistMenu.add(playlistItem);
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JMenuItem errorItem = new JMenuItem("Error loading playlists");
+                errorItem.setEnabled(false);
+                playlistMenu.add(errorItem);
+            }
+
+            // 6. Show the popup menu right below the button
+            playlistMenu.show(button, 0, button.getHeight());
+        });
         return button;
     }
 
@@ -199,7 +321,48 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
         });
 
-        button.addActionListener(e -> System.out.println("Delete from playlist button clicked!"));
+        button.addActionListener(e -> {
+            // 1. Check if a track is selected
+            if (selectedTrack == null) {
+                JOptionPane.showMessageDialog(button, "Please click on a track to select it first.", "No Track Selected", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // 2. Check that we are indeed viewing a playlist
+            if (currentlyLoadedPlaylist == null) {
+                JOptionPane.showMessageDialog(button, "This action is only available within a playlist.", "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // 3. Confirm the deletion
+            int choice = JOptionPane.showConfirmDialog(button,
+                "Remove '" + selectedTrack.getTitle() + "' from '" + currentlyLoadedPlaylist.getText() + "'?",
+                "Confirm Removal",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+            if (choice == JOptionPane.YES_OPTION) {
+                // 4. Call the DAO
+                try {
+                    boolean success = playlistSongDao.removeSongFromPlaylist(
+                        currentlyLoadedPlaylist.getPlaylistId(),
+                        selectedTrack.getId()
+                    );
+
+                    if (success) {
+                        // 5. Remove the song from the UI *locally*
+                        tracks.remove(selectedTrack); // Remove from the master list
+                        populateTrackList(tracks); // Re-populate the panel with the modified list
+                        selectedTrack = null; // De-select the track
+                    } else {
+                        JOptionPane.showMessageDialog(button, "Could not remove the song.", "Failed", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(button, "Error removing song from database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         return button;
     }
 

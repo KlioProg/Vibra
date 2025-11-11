@@ -69,6 +69,8 @@ public final class Database {
                 " playlist_id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 " user_id INTEGER NOT NULL, " +
                 "  name TEXT NOT NULL," +
+                " bio TEXT," +
+                " cover BLOB," +
                 "  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
                 " FOREIGN KEY (user_id) REFERENCES users(id)" +
                 ");"

@@ -144,8 +144,8 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanelInstance, this.currentUserID);
 
         // This is the correct way to init TrackListPanel (no args)
-        trackListPanel = new TrackListPanel(); 
-        mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel, albumPanelInstance);
+        trackListPanel = new TrackListPanel(this.currentUserID); 
+        mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel, albumPanelInstance, this.currentUserID);
         
         // --- 5. Inject dependencies ---
         // This gives LikedPanel and TrackListPanel a reference to the player

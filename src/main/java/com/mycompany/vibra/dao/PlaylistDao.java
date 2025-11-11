@@ -16,14 +16,14 @@ public class PlaylistDao {
      * CHANGED: Now accepts bio and cover.
      * Note: You must convert your ImageIcon to byte[] *before* calling this.
      */
-    public Playlist createPlaylist(User user, String name, String bio, byte[] coverBytes) throws SQLException {
+    public Playlist createPlaylist(int userId, String name, String bio, byte[] coverBytes) throws SQLException {
         // CHANGED: Added bio and cover columns
         final String sql = "INSERT INTO playlists (user_id, name, bio, cover) VALUES (?, ?, ?, ?)";
 
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, user.getId());
+            ps.setInt(1, userId);
             ps.setString(2, name);
             ps.setString(3, bio); // CHANGED: Added bio
             ps.setBytes(4, coverBytes); // CHANGED: Added cover
@@ -35,7 +35,7 @@ public class PlaylistDao {
                     int playlistId = rs.getInt(1);
                     // CHANGED: Return the full 5-argument Playlist object
                     ImageIcon coverIcon = ImageUtils.convertBytesToImageIcon(coverBytes);
-                    return new Playlist(playlistId, name, bio, coverIcon, user.getId());
+                    return new Playlist(playlistId, name, bio, coverIcon, userId);
                 }
             }
         }
