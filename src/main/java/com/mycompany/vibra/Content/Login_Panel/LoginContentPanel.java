@@ -184,7 +184,10 @@ public class LoginContentPanel extends JPanel {
                         if (user != null) {
                             // --- SUCCESS ---
                             JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(LoginContentPanel.this);
-                            MainAppFrame mainFrame = new MainAppFrame();
+
+                            int loggedInUserID = user.getId();
+                            MainAppFrame mainFrame = new MainAppFrame(loggedInUserID);
+
                             mainFrame.setVisible(true);
                             topFrame.dispose();
                         } else {
@@ -242,7 +245,4 @@ public class LoginContentPanel extends JPanel {
 
         return label;
     }
-
-
 }
-

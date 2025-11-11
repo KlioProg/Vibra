@@ -21,6 +21,7 @@ public class LightModeIconFactory extends IconFactory {
             case "music_hover" -> createIcon("/icons/music_white.png", 28, 28);
             case "logout" -> createIcon("/icons/Logout_black.png", 34,34);
             case "logout_hover" -> createIcon("/icons/Logout_Hover.png", 34,34);
+            case "edit" -> createIcon("/icons/edit_black.png", 34, 34);
 
 
             default -> {

@@ -41,12 +41,14 @@ public final class Database {
             );
 
             st.execute(
-                "CREATE TABLE IF NOT EXISTS songs (" +
+                "CREATE TABLE IF NOT EXISTS tracks (" +
                 "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "  title TEXT NOT NULL," +
                 "  artist TEXT NOT NULL," +
-                "  duration INTEGER NOT NULL," +
-                " filePATH TEXT NOT NULL UNIQUE" +
+                " album TEXT NOT NULL, " +
+                " file_path TEXT UNIQUE NOT NULL," +
+                "  duration_sec INTEGER," +
+                " album_art BLOB" +
                 ");"
             );
 
@@ -57,7 +59,7 @@ public final class Database {
                 "  created_at TEXT DEFAULT CURRENT_TIMESTAMP," +
                 "  PRIMARY KEY (user_id, song_id)," +
                 "  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE," +
-                "  FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE" +
+                "  FOREIGN KEY (song_id) REFERENCES tracks(id) ON DELETE CASCADE" +
                 ");"
             );
 
@@ -75,7 +77,7 @@ public final class Database {
                 "CREATE TABLE IF NOT EXISTS playlist_songs (" +
                 "  playlist_id INTEGER NOT NULL," +
                 "  song_id INTEGER NOT NULL," +
-                "  FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE," +
+                "  FOREIGN KEY (song_id) REFERENCES tracks(id) ON DELETE CASCADE," +
                 "  FOREIGN KEY (playlist_id) REFERENCES playlists(playlist_id) ON DELETE CASCADE," +
                 "  PRIMARY KEY (playlist_id, song_id)" +
                 ");"

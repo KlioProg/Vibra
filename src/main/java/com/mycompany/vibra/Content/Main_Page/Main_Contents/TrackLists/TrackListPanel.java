@@ -18,34 +18,37 @@ import javax.swing.JScrollPane;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
-import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.Track;
+// --- IMPORT THE MUSIC PLAYER PANEL ---
+import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
+
 
 public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerListener {
 
     // --- Fields ---
-    private ArrayList<TrackList> trackListComponents; // Holds the UI components
-    private ArrayList<Track> tracks;                  // Holds the track data
-    private MusicPlayerPanel musicPlayerPanel;        // A reference to the main player panel
-    private JPanel trackListContainer;                // The panel that holds the actual track JButtons
-    private JScrollPane scrollPane;                   // To make the list scrollable
+    private ArrayList<TrackList> trackListComponents;
+    private ArrayList<Track> tracks;
+    
+    // --- NO LONGER NEEDS AUDIO PLAYER, NEEDS THE MAIN PLAYER ---
+    private MusicPlayerPanel musicPlayerPanel; // Reference to the main player
+
+    private JPanel trackListContainer;
+    private JScrollPane scrollPane;
 
     private JLabel trackLabel;
     private JLabel playLabel;
     FontFactory fontFactory = new DunbarFactory();
 
-    // The constructor now accepts the MusicPlayerPanel.
-    public TrackListPanel(MusicPlayerPanel musicPlayerPanel) {
+    // --- CONSTRUCTOR IS NOW EMPTY ---
+    public TrackListPanel() {
         setLayout(new BorderLayout());
         ThemeManager.getInstance().addThemeChangerListener(this);
 
-        this.musicPlayerPanel = musicPlayerPanel; // Store the reference to the player
         tracks = new ArrayList<>();
         trackListComponents = new ArrayList<>();
 
         // --- 2. Build Top Panel (Header) ---
-        // This is your exact UI from your sample
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 10, 12));
@@ -57,9 +60,9 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         trackLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
         topPanel.add(trackLabel);
 
-        topPanel.add(Box.createHorizontalStrut(16)); // From your sample
+        topPanel.add(Box.createHorizontalStrut(16));
 
-        RoundedButtonFactory saveButton = createSavePlaylistButton(); // Your save button
+        RoundedButtonFactory saveButton = createSavePlaylistButton();
         topPanel.add(saveButton);
 
         // --- 3. Build Track Container (Scrollable) ---
@@ -86,47 +89,51 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         // --- 5. Add Panels to the Main Layout ---
-        add(topPanel, BorderLayout.NORTH);     // Add header to the top
-        add(scrollPane, BorderLayout.CENTER);  // Add scrollable list to the center
+        add(topPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
 
         applyTheme(ThemeManager.getInstance().isDarkMode());
     }
 
+    // --- ADD THIS METHOD ---
     /**
-     * ✅ PUBLIC method so other panels can load tracks.
-     * Clears the current list and loads the new tracks into the UI.
+     * Allows MainCardPanel to inject the central MusicPlayerPanel.
+     * This enables click-to-play.
+     */
+    public void setMusicPlayerPanel(MusicPlayerPanel musicPlayerPanel) {
+        this.musicPlayerPanel = musicPlayerPanel;
+    }
+
+    /**
+     * Clears the current list and loads new tracks into the UI.
      */
     public void loadTracksIntoPanel(List<Track> newTracks) {
 
-        // A safe way to clear: remove all components *except* the first three (label, strut, glue)
         while (trackListContainer.getComponentCount() > 3) {
-            trackListContainer.remove(2); // Repeatedly remove the component at index 2
+            trackListContainer.remove(2);
         }
 
-        // --- 2. Clear old data ---
         trackListComponents.clear();
         tracks.clear();
-
-        // --- 3. Add new data ---
         tracks.addAll(newTracks);
 
-        // We need to remove the glue, add tracks, then add glue back
         trackListContainer.remove(trackListContainer.getComponentCount() - 1); // Remove VerticalGlue
 
         int trackNum = 1;
         for (Track track : tracks) {
-            // Create the track button, passing it a reference to the music player.
-            TrackList trackComponent = new TrackList(track, trackNum, musicPlayerPanel);
+            
+            // --- THIS IS THE FIX ---
+            // This now calls the 3-argument constructor for TrackList
+            TrackList trackComponent = new TrackList(track, trackNum, this.musicPlayerPanel);
 
-            trackListComponents.add(trackComponent);   // Add to our internal list
-            trackListContainer.add(trackComponent);    // Add to the UI panel
-            trackListContainer.add(Box.createVerticalStrut(8)); // Add spacing
+            trackListComponents.add(trackComponent);
+            trackListContainer.add(trackComponent);
+            trackListContainer.add(Box.createVerticalStrut(8));
             trackNum++;
         }
 
-        trackListContainer.add(Box.createVerticalGlue()); // Add glue back at the end
+        trackListContainer.add(Box.createVerticalGlue());
 
-        // --- 4. Refresh the UI ---
         trackListContainer.revalidate();
         trackListContainer.repaint();
     }
