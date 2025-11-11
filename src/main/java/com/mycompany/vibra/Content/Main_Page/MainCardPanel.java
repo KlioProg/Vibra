@@ -5,6 +5,7 @@ import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MainLibraryPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Music_Player.MusicPlayerPanel;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
@@ -27,6 +28,7 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
     private JPanel contentPanel; // This is the panel with CardLayout
     private JPanel sidebar;
     private IconFactory iconFactory;
+    private IconFactory defaultIconFactory;
     private LikedPanel likedPanelInstance;
 
     // Keep references to sidebar icons for theme changes
@@ -69,17 +71,25 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         cardLayout.show(contentPanel, text);
     }
 
-    
+
     private void initializePage() {
         setLayout(new BorderLayout()); // MainCardPanel uses BorderLayout
 
         boolean isDark = ThemeManager.getInstance().isDarkMode();
         iconFactory = isDark ? new DarkModeIconFactory() : new LightModeIconFactory();
+        ImageIcon defaultCover = iconFactory.createIcon("playlist_default");
+
 
         // --- 1. Instantiate all shared components ---
         likedPanelInstance = new LikedPanel(this.currentUserID);
         audioPlayer = new AudioPlayer();
-        mainPlaylist = new Playlist(1, "My Playlist", this.currentUserID); 
+        mainPlaylist = new Playlist(
+                1,
+                "My Playlist",
+                "Your main playlist",
+                defaultCover,
+                this.currentUserID
+        );
 
         // --- 2. Build Sidebar (with new Album button) ---
         sidebar = new JPanel();
@@ -126,15 +136,15 @@ public class MainCardPanel extends JPanel implements ThemeManager.ThemeChangerLi
         JPanel mainContentArea = new JPanel(new BorderLayout());
 
         // --- 4. Instantiate all panels, injecting dependencies ---
-        
+
         // Create the panels that others depend on first.
         // This is the correct version (with currentUserID)
         musicPlayerPanel = new MusicPlayerPanel(audioPlayer, mainPlaylist, likedPanelInstance, this.currentUserID);
-        
+
         // This is the correct way to init TrackListPanel (no args)
-        trackListPanel = new TrackListPanel(); 
+        trackListPanel = new TrackListPanel();
         mainLibraryPanel = new MainLibraryPanel(musicPlayerPanel, trackListPanel);
-        
+
         // --- 5. Inject dependencies ---
         // This gives LikedPanel and TrackListPanel a reference to the player
         // so click-to-play works.

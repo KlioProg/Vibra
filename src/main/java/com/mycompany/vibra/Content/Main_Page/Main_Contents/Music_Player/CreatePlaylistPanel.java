@@ -19,10 +19,9 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 
 /**
- * A modern, rounded panel for creating a new playlist.
+ * A modern, rounded panel for creating OR editing a playlist.
  * This class EXTENDS RoundedPanelFactory to get its rounded-corner look.
  */
-// ✅ 1. EXTEND RoundedPanelFactory instead of JPanel
 public class CreatePlaylistPanel extends RoundedPanelFactory {
 
     // --- Fields ---
@@ -39,9 +38,9 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
     private IconFactory themeIcons;
     FontFactory fontFactory = new DunbarFactory();
 
-    // --- Constructor ---
+    // --- Constructor 1: For "Create" ---
     public CreatePlaylistPanel() {
-        // ✅ 2. Call the SUPER constructor to make THIS panel rounded
+        // Call the super constructor to make THIS panel rounded
         super(
                 20, // cornerRadius
                 new Color(0x18, 0x18, 0x18), // backgroundColor
@@ -51,17 +50,50 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
                 460   // preferredHeight
         );
 
-        // 3. Initialize factories
+        // Initialize factories
         this.fontFactory = new DunbarFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
         this.icons = new ButtonIconFactory();
 
-        // 4. Build the UI
+        // Set default cover for a new playlist
+        this.playlistCover = icons.createIcon("playlist_default");
+
+        // Build the UI
         initUI();
     }
 
+    // --- ✅ Constructor 2: For "Edit" ---
+    public CreatePlaylistPanel(String initialName, String initialBio, ImageIcon initialCover) {
+        // Call the super constructor (same as above)
+        super(
+                20, // cornerRadius
+                new Color(0x18, 0x18, 0x18), // backgroundColor
+                null, // borderColor
+                0,    // borderThickness
+                330,  // preferredWidth
+                460   // preferredHeight
+        );
+
+        // Initialize factories
+        this.fontFactory = new DunbarFactory();
+        this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
+        this.icons = new ButtonIconFactory();
+
+        // Set the EXISTING cover
+        this.playlistCover = (initialCover != null) ? initialCover : icons.createIcon("playlist_default");
+
+        // Build the UI
+        initUI();
+
+        // ✅ Set the initial text for the fields
+        nameField.setText(initialName);
+        bioField.setText(initialBio);
+    }
+
+
     /**
      * Initializes and lays out all UI components for the panel.
+     * This method is now called by BOTH constructors.
      */
     private void initUI() {
 
@@ -81,8 +113,8 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
 
         add(Box.createVerticalStrut(4));
 
-        playlistCover = icons.createIcon("playlist_default"); // Use the corrected name from last time
-
+        // ✅ This 'playlistCover' field is now set by the constructor
+        //    before initUI() is even called.
         Image scaledImg = playlistCover.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
         coverArtLabel = new JLabel(new ImageIcon(scaledImg));
 
@@ -94,18 +126,18 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         add(roundedCoverPanel);
 
         // --- 4. "Change Cover" Button ---
-        add(Box.createVerticalStrut(15)); // More breathing room
+        add(Box.createVerticalStrut(15));
         RoundedButtonFactory changeCoverBtn = createChooseImageButton();
         changeCoverBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(changeCoverBtn);
 
         // --- 5. Text Fields ---
-        add(Box.createVerticalStrut(16)); // More breathing room
+        add(Box.createVerticalStrut(16));
 
         nameField = playlistNameTextField(); // Use your factory
         add(nameField);
 
-        add(Box.createVerticalStrut(12)); // Less space between related fields
+        add(Box.createVerticalStrut(12));
 
         bioField = bioPlaylistTextField(); // Use your factory
         add(bioField);
@@ -120,10 +152,10 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
     }
 
     // --- Factory Methods for Components ---
+    // (No changes needed in these methods)
 
     private RoundedTextFieldFactory createStyledTextField(String placeholder){
         RoundedTextFieldFactory textField = new RoundedTextFieldFactory(40);
-
         textField.setPreferredSize(new Dimension(350, 44));
         textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         textField.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -131,7 +163,6 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         textField.setForeground(new Color(0x100D0D));
         textField.setFont(fontFactory.createFont("dunbartall_book", 16));
         textField.setPlaceholder(placeholder);
-
         return textField;
     }
 
@@ -156,7 +187,10 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         // Add the save logic
         button.addActionListener(e -> {
             if (nameField.getText() == null || nameField.getText().trim().isEmpty()) {
-                System.out.println("Playlist name is required.");
+                // ✅ Added a simple visual warning
+                nameField.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
+                JOptionPane.showMessageDialog(this, "Playlist name is required.", "Error", JOptionPane.ERROR_MESSAGE);
+                nameField.setBorder(null); // Reset border
                 return;
             }
             this.playlistCreated = true;
@@ -169,7 +203,6 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 button.setBackground(new Color(0x7B2CBF));
             }
-            // ... (rest of your mouse listener) ...
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 button.setBackground(new Color(0x9D4EDD));
@@ -194,7 +227,6 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         button.setBackground(new Color(0x9D4EDD));
         button.setForeground(new Color(0xF9F6EE));
 
-        // ✅ Set a consistent height (44px) and size
         Dimension btnSize = new Dimension(150, 44);
         button.setPreferredSize(btnSize);
         button.setMaximumSize(btnSize);
@@ -202,7 +234,6 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
 
         button.addActionListener(e -> openImageChooser());
 
-        // ... (rest of your mouse listener) ...
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
@@ -228,6 +259,7 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
     }
 
     // --- Helper Methods ---
+    // (No changes here)
 
     private void openImageChooser() {
         JFileChooser fileChooser = new JFileChooser();

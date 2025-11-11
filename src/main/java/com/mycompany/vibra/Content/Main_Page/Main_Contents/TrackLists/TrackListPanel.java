@@ -3,6 +3,7 @@ package com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout; // Import FlowLayout
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -11,13 +12,23 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon; // Import ImageIcon
+import javax.swing.JButton; // Import JButton
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar; // ✅ Import JScrollBar
 import javax.swing.JScrollPane;
 
+// ✅ Import your new UI class
+import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.FontFactory;
-import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
+
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.ButtonIconFactory;
+import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
+import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory; // Kept for RoundedIconOnlyButton
+import com.mycompany.vibra.Factories.Common_UI.RoundedIconButtonFactory; // Kept for RoundedIconOnlyButton
+import com.mycompany.vibra.Factories.Common_UI.RoundedIconOnlyButton; // Import new class
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.Track;
 // --- IMPORT THE MUSIC PLAYER PANEL ---
@@ -29,18 +40,19 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
     // --- Fields ---
     private ArrayList<TrackList> trackListComponents;
     private ArrayList<Track> tracks;
-    
-    // --- NO LONGER NEEDS AUDIO PLAYER, NEEDS THE MAIN PLAYER ---
+
     private MusicPlayerPanel musicPlayerPanel; // Reference to the main player
 
     private JPanel trackListContainer;
-    private JScrollPane scrollPane;
+    private JScrollPane scrollPane; // Kept as field
 
     private JLabel trackLabel;
     private JLabel playLabel;
     FontFactory fontFactory = new DunbarFactory();
 
-    // --- CONSTRUCTOR IS NOW EMPTY ---
+    private IconFactory buttonIconFactory = new ButtonIconFactory();
+
+
     public TrackListPanel() {
         setLayout(new BorderLayout());
         ThemeManager.getInstance().addThemeChangerListener(this);
@@ -48,10 +60,9 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         tracks = new ArrayList<>();
         trackListComponents = new ArrayList<>();
 
-        // --- 2. Build Top Panel (Header) ---
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 10, 12));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 8, 12));
         topPanel.setOpaque(false);
         topPanel.setAlignmentX(LEFT_ALIGNMENT);
         topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
@@ -59,23 +70,34 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         trackLabel = new JLabel("Track List");
         trackLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
         topPanel.add(trackLabel);
+        topPanel.add(Box.createHorizontalStrut(8));
 
-        topPanel.add(Box.createHorizontalStrut(16));
-
-        RoundedButtonFactory saveButton = createSavePlaylistButton();
-        topPanel.add(saveButton);
-
-        // --- 3. Build Track Container (Scrollable) ---
         trackListContainer = new JPanel();
         trackListContainer.setLayout(new BoxLayout(trackListContainer, BoxLayout.Y_AXIS));
         trackListContainer.setOpaque(false);
-        trackListContainer.setBorder(BorderFactory.createEmptyBorder(10, 12, 0, 12));
+        trackListContainer.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setOpaque(false);
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0)); // 10px horizontal gap
+        buttonPanel.setAlignmentX(LEFT_ALIGNMENT);
+        buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        // Using the new icon button methods
+        JButton saveButton = createAddButton();
+        JButton deleteButton = createDeleteButton();
+
+        buttonPanel.add(saveButton);
+        buttonPanel.add(deleteButton);
+
+        trackListContainer.add(buttonPanel); // Add the panel with buttons
+        trackListContainer.add(Box.createVerticalStrut(8));
 
         playLabel = new JLabel("What’s Playing:");
-        playLabel.setFont(fontFactory.createFont("dunbartall_bold", 24));
+        playLabel.setFont(fontFactory.createFont("dunbartall_bold", 16));
         playLabel.setAlignmentX(LEFT_ALIGNMENT);
         trackListContainer.add(playLabel);
-        trackListContainer.add(Box.createVerticalStrut(12));
+        trackListContainer.add(Box.createVerticalStrut(12)); // Kept this at 12px for space
 
         trackListContainer.add(Box.createVerticalGlue()); // Keeps tracks at the top
 
@@ -92,38 +114,31 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
 
+        // --- 6. Apply Themes ---
         applyTheme(ThemeManager.getInstance().isDarkMode());
+        applyScrollBarTheme(); // ✅ Apply custom scrollbar UI
     }
-
-    // --- ADD THIS METHOD ---
-    /**
-     * Allows MainCardPanel to inject the central MusicPlayerPanel.
-     * This enables click-to-play.
-     */
     public void setMusicPlayerPanel(MusicPlayerPanel musicPlayerPanel) {
         this.musicPlayerPanel = musicPlayerPanel;
     }
 
-    /**
-     * Clears the current list and loads new tracks into the UI.
-     */
     public void loadTracksIntoPanel(List<Track> newTracks) {
 
-        while (trackListContainer.getComponentCount() > 3) {
-            trackListContainer.remove(2);
+        // Keep the first 4 components (buttonPanel, strut, playLabel, strut)
+        while (trackListContainer.getComponentCount() > 4) {
+            trackListContainer.remove(4);
         }
 
         trackListComponents.clear();
         tracks.clear();
         tracks.addAll(newTracks);
 
-        trackListContainer.remove(trackListContainer.getComponentCount() - 1); // Remove VerticalGlue
+        // Remove VerticalGlue (it's the last component)
+        trackListContainer.remove(trackListContainer.getComponentCount() - 1);
 
         int trackNum = 1;
         for (Track track : tracks) {
-            
-            // --- THIS IS THE FIX ---
-            // This now calls the 3-argument constructor for TrackList
+
             TrackList trackComponent = new TrackList(track, trackNum, this.musicPlayerPanel);
 
             trackListComponents.add(trackComponent);
@@ -132,57 +147,95 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             trackNum++;
         }
 
-        trackListContainer.add(Box.createVerticalGlue());
+        trackListContainer.add(Box.createVerticalGlue()); // Add the glue back
 
         trackListContainer.revalidate();
         trackListContainer.repaint();
     }
 
-    /**
-     * Your original save button code.
-     */
-    private RoundedButtonFactory createSavePlaylistButton() {
-        RoundedButtonFactory button = new RoundedButtonFactory("Save Playlist", 35);
-        button.setPreferredSize(new Dimension(133, 29));
-        button.setBackground(new Color(0x9D4EDD));
-        button.setForeground(new Color(0xF9F6EE));
-        button.setFont(fontFactory.createFont("dunbartall_bold", 16));
+    // --- ✅ UPDATED ADD BUTTON ---
+    private JButton createAddButton() {
+        ImageIcon addIcon = buttonIconFactory.createIcon("add");
 
-        button.addActionListener(e -> System.out.println("Save Playlist button clicked!"));
+        JButton button = new RoundedIconOnlyButton(addIcon, 34, 34);
+
+        // --- Color Logic ---
+        Color baseColor = new Color(0x9D4EDD);
+        Color hoverColor = new Color(0x7B2CBF);
+        Color pressColor = new Color(0x5A189A); // ✅ Fixed press color
+
+        button.setBackground(baseColor);
+        button.setToolTipText("Add to playlist");
 
         button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(new Color(0x7B2CBF));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(new Color(0x9D4EDD));
-                button.setForeground(new Color(0xF9F6EE));
-            }
-            @Override
-            public void mousePressed(MouseEvent e) {
-                button.setBackground(new Color(0x5A189A));
-                button.setForeground(new Color(0x9D4EDD));
-            }
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                button.setBackground(new Color(0x7B2CBF));
-                button.setForeground(new Color(0xF9F6EE));
-            }
+            @Override public void mouseEntered(MouseEvent e) { button.setBackground(hoverColor); }
+            @Override public void mouseExited(MouseEvent e) { button.setBackground(baseColor); }
+            @Override public void mousePressed(MouseEvent e) { button.setBackground(pressColor); }
+            @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
         });
+
+        button.addActionListener(e -> System.out.println("Add to playlist button clicked!"));
         return button;
     }
 
+    // --- ✅ UPDATED DELETE BUTTON ---
+    private JButton createDeleteButton() {
+        ImageIcon deleteIcon = buttonIconFactory.createIcon("delete");
+
+        JButton button = new RoundedIconOnlyButton(deleteIcon, 34, 34);
+
+        // --- Color Logic (Same as Add button) ---
+        Color baseColor = new Color(0x9D4EDD);
+        Color hoverColor = new Color(0x7B2CBF);
+        Color pressColor = new Color(0x5A189A); // ✅ Fixed press color
+
+        button.setBackground(baseColor);
+        button.setToolTipText("Delete from playlist");
+
+        button.addMouseListener(new MouseAdapter() {
+            @Override public void mouseEntered(MouseEvent e) { button.setBackground(hoverColor); }
+            @Override public void mouseExited(MouseEvent e) { button.setBackground(baseColor); }
+            @Override public void mousePressed(MouseEvent e) { button.setBackground(pressColor); }
+            @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
+        });
+
+        button.addActionListener(e -> System.out.println("Delete from playlist button clicked!"));
+        return button;
+    }
+
+    // --- ✅ NEW HELPER METHOD ---
+    /**
+     * Applies the custom UI to the scrollbar based on the current theme.
+     */
+    private void applyScrollBarTheme() {
+        if (scrollPane == null) return;
+
+        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+        verticalScrollBar.setUI(new CustomScrollBarUI());
+
+        // This is important to ensure the track background repaints correctly
+        verticalScrollBar.revalidate();
+        verticalScrollBar.repaint();
+
+        // This sets the color of the small square in the corner
+        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new JPanel());
+        scrollPane.getCorner(JScrollPane.UPPER_RIGHT_CORNER).setBackground(ThemeManager.getInstance().getSidebarColor());
+    }
+
+    // --- ✅ UPDATED THEME METHOD ---
     private void applyTheme(boolean isDarkMode) {
-        Color bgColor = ThemeManager.getInstance().getTrackAlbumColor();
+        ThemeManager tm = ThemeManager.getInstance();
+
+        // Use getSidebarColor so the scrollbar track matches the panel
+        Color bgColor = tm.getSidebarColor();
         setBackground(bgColor);
 
-        trackListContainer.setOpaque(false);
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
+        // Also set the container and viewport backgrounds
+        trackListContainer.setBackground(bgColor);
+        scrollPane.setBackground(bgColor);
+        scrollPane.getViewport().setBackground(bgColor);
 
-        Color fg = ThemeManager.getInstance().getForegroundColor();
+        Color fg = tm.getForegroundColor();
         trackLabel.setForeground(fg);
         playLabel.setForeground(fg);
     }
@@ -190,6 +243,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
     @Override
     public void onThemeChanged(boolean isDarkMode) {
         applyTheme(isDarkMode);
+        applyScrollBarTheme(); // ✅ Re-apply scrollbar theme on toggle
         revalidate();
         repaint();
     }
