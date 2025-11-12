@@ -6,13 +6,12 @@ import com.mycompany.vibra.Factories.Common_UI.RoundedBackdropFactory;
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.TrackLists.TrackListPanel;
 import com.mycompany.vibra.Factories.Common_UI.GradientPainter;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
-import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI; // ✅ NEW IMPORT
+import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI;
 import com.mycompany.vibra.musicUtilities.Track;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.util.Comparator;
-
 import java.util.List;
 import java.util.Map;
 import java.awt.event.MouseAdapter;
@@ -24,13 +23,11 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
 
     private TrackListPanel trackListPanel;
     private JPanel gridPanel;
-    private JScrollPane scrollPane; // ✅ MADE FIELD TO ACCESS SCROLLBAR
+    private JScrollPane scrollPane;
 
-    // Design System for this panel
-    private static final Color GRADIENT_COLOR_CENTER = new Color(0, 119, 255); // Bright Blue
-    private static final Color GRADIENT_COLOR_EDGE = new Color(25, 0, 87);     // Dark Blue/Purple
-
-    // Gradient properties
+    // Design System
+    private static final Color GRADIENT_COLOR_CENTER = new Color(0, 119, 255);
+    private static final Color GRADIENT_COLOR_EDGE = new Color(25, 0, 87);
     private static final float[] GRADIENT_FRACTIONS = {0.0f, 1.0f};
     private static final Color[] GRADIENT_COLORS = {GRADIENT_COLOR_CENTER, GRADIENT_COLOR_EDGE};
 
@@ -44,29 +41,35 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         this.trackListPanel = trackListPanel;
     }
 
+    // --- ⬇️ THIS IS THE MODIFIED METHOD ⬇️ ---
     public void displayRealAlbums(Map<String, List<Track>> albums) {
         // 1. Clear any old data
         gridPanel.removeAll();
 
-        // 2. Loop through the real album map
+        // --- 2. DEFINE THE HOVER COLOR ---
+        Color hoverColor = new Color(0x535353); // The gray hover you want
+
+        // 3. Loop through the real album map
         for (Map.Entry<String, List<Track>> entry : albums.entrySet()) {
             String albumTitle = entry.getKey();
             List<Track> tracksInAlbum = entry.getValue();
 
-            // 3. Get album art from the first track
+            // 4. Get album art
             ImageIcon albumArtIcon = null;
             if (!tracksInAlbum.isEmpty()) {
                 Image art = tracksInAlbum.get(0).getAlbumArtImage();
                 if (art != null) {
-                    // Use the existing scaling logic from AlbumCardPanel
                     albumArtIcon = new ImageIcon(art.getScaledInstance(150, 150, Image.SCALE_SMOOTH));
                 }
             }
 
-            // 4. Create a new card (using the new constructor)
+            // 5. Create a new card
             AlbumCardPanel card = new AlbumCardPanel(albumArtIcon, albumTitle, tracksInAlbum);
 
-            // 5. Add the click listener
+            // Store the card's original state (we assume it's transparent)
+            Color originalColor = card.getBackground();
+
+            // 6. Add the click AND hover listener
             card.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -76,13 +79,28 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
                         trackListPanel.loadTracksIntoPanel(tracksInAlbum);
                     }
                 }
-            });
 
-            // 6. Add the new, real card to the grid
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    card.setOpaque(true); // Make it paint its background
+                    card.setBackground(hoverColor); // Set the gray hover
+                    card.repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    card.setOpaque(false); // Make it transparent again
+                    card.setBackground(originalColor); // Reset to original color
+                    card.repaint();
+                }
+            });
+            // --- ⬆️ END OF MODIFIED LOGIC ⬆️ ---
+
+            // 7. Add the new, real card to the grid
             gridPanel.add(card);
         }
 
-        // 7. Refresh the UI
+        // 8. Refresh the UI
         gridPanel.revalidate();
         gridPanel.repaint();
     }
@@ -115,7 +133,7 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         // --- Album Grid ---
         gridPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         gridPanel.setOpaque(false);
-        gridPanel.setBorder(new EmptyBorder(20, 20, 20, 20)); // <-- ADD THIS
+        gridPanel.setBorder(new EmptyBorder(20, 20, 20, 20)); // Padding
 
         // --- Scroll Pane (Unchanged) ---
         scrollPane = new JScrollPane(gridPanel);
@@ -134,15 +152,14 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
 
     private void applyScrollBarTheme() {
         if (scrollPane == null) return;
-
         JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
         verticalScrollBar.setUI(new CustomScrollBarUI());
-
         JPanel corner = new JPanel();
-        corner.setOpaque(false); // This is the key
-        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, corner); // Set the transparent panel
+        corner.setOpaque(false); // Transparent corner
+        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, corner);
         scrollPane.getCorner(JScrollPane.UPPER_RIGHT_CORNER).setBackground(ThemeManager.getInstance().getContainerColor());
     }
+
     private void applyTheme(boolean isDark) {
         Color foreground = ThemeManager.getInstance().getForegroundColor();
         header.setForeground(foreground);
@@ -151,25 +168,21 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         Color backdropColor = ThemeManager.getInstance().getContainerColor();
         darkBackdrop.setBackground(backdropColor);
 
-        // Ensure the scroll pane viewport matches the backdrop color
         if (scrollPane != null && scrollPane.getViewport() != null) {
             scrollPane.getViewport().setBackground(backdropColor);
         }
-
-        // Repaint to reflect color changes
         darkBackdrop.repaint();
     }
 
     @Override
     public void onThemeChanged(boolean isDarkMode) {
         applyTheme(isDarkMode);
-        applyScrollBarTheme(); // ✅ UPDATE SCROLLBAR ON THEME CHANGE
+        applyScrollBarTheme();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // Use the centralized GradientPainter utility to draw the background
         GradientPainter.paintRadialGradient(g, this, GRADIENT_COLORS, GRADIENT_FRACTIONS);
     }
 }
