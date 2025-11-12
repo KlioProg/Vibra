@@ -112,9 +112,6 @@ public class PopUp_YesNo extends RoundedPanelFactory implements ThemeManager.The
         return button;
     }
 
-    /**
-     * Custom styled button creator for cancel/No action (Gray/Muted).
-     */
     private RoundedButtonFactory createCancelButton(String text) {
         RoundedButtonFactory button = new RoundedButtonFactory(text, 25);
 

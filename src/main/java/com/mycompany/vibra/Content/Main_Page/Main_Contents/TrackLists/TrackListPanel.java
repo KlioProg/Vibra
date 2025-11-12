@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 // ✅ Import your new UI class
 import com.mycompany.vibra.Content.PopUpChoices.PopUp_Alert;
+import com.mycompany.vibra.Content.PopUpChoices.PopUp_SelectionList;
 import com.mycompany.vibra.Content.PopUpChoices.PopUp_YesNo;
 import com.mycompany.vibra.Factories.Common_UI.CustomScrollBarUI;
 import com.mycompany.vibra.Factories.Common_UI.FontFactory_FactoryMethod.DunbarFactory;
@@ -204,16 +205,13 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             boolean success = playlistSongDao.addSongToPlaylist(playlist.getPlaylistId(), selectedTrack.getId());
 
             if (success) {
-                JOptionPane.showMessageDialog(this, 
-                    "'" + selectedTrack.getTitle() + "' added to '" + playlist.getText() + "'.",
-                    "Song Added", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                PopUp_Alert.showAlert(this,
+                        "Song Added",
+                        "'" + selectedTrack.getTitle() + "' added to '" + playlist.getText() + "'.");
             } else {
-                // This happens if the "INSERT OR IGNORE" finds a duplicate
-                JOptionPane.showMessageDialog(this, 
-                    "'" + selectedTrack.getTitle() + "' is already in '" + playlist.getText() + "'.",
-                    "Already Exists", 
-                    JOptionPane.WARNING_MESSAGE);
+                PopUp_Alert.showAlert(this,
+                        "Already Exists",
+                        "'" + selectedTrack.getTitle() + "' is already in '" + playlist.getText() + "'.");
             }
 
         } catch (SQLException ex) {
@@ -229,7 +227,7 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         ImageIcon addIcon = buttonIconFactory.createIcon("add");
         JButton button = new RoundedIconOnlyButton(addIcon, 34, 34);
 
-        // --- ✅ YOUR COLOR LOGIC RESTORED ---
+        // --- YOUR COLOR LOGIC (Unchanged) ---
         Color baseColor = new Color(0x9D4EDD); // Lighter purple
         Color hoverColor = new Color(0x7B2CBF); // Darker purple
         Color pressColor = new Color(0x5A189A); // Darkest purple
@@ -243,40 +241,53 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
             @Override public void mousePressed(MouseEvent e) { button.setBackground(pressColor); }
             @Override public void mouseReleased(MouseEvent e) { button.setBackground(hoverColor); }
         });
-        // --- End of color logic ---
 
+        // --- THIS IS ALREADY 100% CUSTOM UI ---
         button.addActionListener(e -> {
             // 1. Check if a track is actually selected
             if (selectedTrack == null) {
+                // Uses your custom PopUp_Alert
                 PopUp_Alert.showAlert(button, "No Track Selected", "Please click on a track to select it first.");
                 return;
             }
 
-            // 2. Create the popup menu
-            JPopupMenu playlistMenu = new JPopupMenu();
             try {
+                // 2. Fetch playlists from the database
                 List<Playlist> userPlaylists = playlistDao.getUserPlaylists(this.currentUserID);
+
+                // 3. Check if any playlists exist
                 if (userPlaylists.isEmpty()) {
-                    JMenuItem emptyItem = new JMenuItem("No playlists found. Create one first!");
-                    emptyItem.setEnabled(false);
-                    playlistMenu.add(emptyItem);
-                } else {
-                    for (Playlist playlist : userPlaylists) {
-                        JMenuItem playlistItem = new JMenuItem(playlist.getText());
-                        playlistItem.addActionListener(itemEvent -> {
-                            addSelectedSongToPlaylist(playlist);
-                        });
-                        playlistMenu.add(playlistItem);
+                    // Uses your custom PopUp_Alert
+                    PopUp_Alert.showAlert(button, "No Playlists", "No playlists found. Create one first!");
+                    return;
+                }
+
+                // 4. Show the custom PopUp_SelectionList dialog
+                // Uses your custom PopUp_SelectionList
+                Playlist chosenPlaylist = PopUp_SelectionList.showPlaylistSelection(
+                        button, "Add to Playlist", userPlaylists);
+
+                // 5. Check if the user selected a playlist (i.e., didn't close the popup)
+                if (chosenPlaylist != null) {
+                    // 6. Show the custom PopUp_YesNo confirmation dialog
+                    String trackName = selectedTrack.getTitle(); // Adjust getTitle() if your method is different
+                    String playlistName = chosenPlaylist.getText();
+                    String title = "Confirm Addition";
+                    String message = "Are you sure you want to add \"" + trackName + "\" to \"" + playlistName + "\"?";
+
+                    // Uses your custom PopUp_YesNo (via the helper)
+                    boolean confirmed = showConfirmDialog(button, title, message);
+                    if (confirmed) {
+                        addSelectedSongToPlaylist(chosenPlaylist);
                     }
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
+                // Uses your custom PopUp_Alert
                 PopUp_Alert.showAlert(button, "Database Error", "Error loading playlists: " + ex.getMessage());
             }
-
-            // 6. Show the popup menu right below the button
-            playlistMenu.show(button, 0, button.getHeight());
         });
+
         return button;
     }
 
@@ -284,7 +295,6 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         ImageIcon deleteIcon = buttonIconFactory.createIcon("delete");
         JButton button = new RoundedIconOnlyButton(deleteIcon, 34, 34);
 
-        // --- ✅ YOUR COLOR LOGIC RESTORED ---
         Color baseColor = new Color(0x9D4EDD); // Lighter purple
         Color hoverColor = new Color(0x7B2CBF); // Darker purple
         Color pressColor = new Color(0x5A189A); // Darkest purple
@@ -386,5 +396,23 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         applyScrollBarTheme(); // ✅ Re-apply scrollbar theme on toggle
         revalidate();
         repaint();
+    }
+
+    private boolean showConfirmDialog(Component parent, String title, String message) {
+        PopUp_YesNo confirmPanel = new PopUp_YesNo(title, message);
+        Window parentWindow = SwingUtilities.getWindowAncestor(parent);
+        JDialog dialog;
+        if (parentWindow instanceof Frame) {
+            dialog = new JDialog((Frame) parentWindow, true);
+        } else {
+            dialog = new JDialog((Dialog) parentWindow, true);
+        }
+        dialog.setUndecorated(true);
+        dialog.setBackground(new Color(0, 0, 0, 0));
+        dialog.setContentPane(confirmPanel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+        return confirmPanel.isConfirmed();
     }
 }

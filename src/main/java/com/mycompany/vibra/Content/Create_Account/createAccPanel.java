@@ -25,6 +25,7 @@ public class createAccPanel extends JPanel {
 
     private RoundedTextFieldFactory username;
     private RoundedTextFieldFactory password;
+    private RoundedTextFieldFactory email;
     private IconFactory iconFactory;
     FontFactory fontFactory = new DunbarFactory();
 
@@ -54,7 +55,7 @@ public class createAccPanel extends JPanel {
 
     private JPanel loginContents() {
         JPanel contentPanel = new JPanel();
-        contentPanel.setPreferredSize(new Dimension(400, 400));
+        contentPanel.setPreferredSize(new Dimension(400, 600));
         contentPanel.setBackground(new Color(0x100D0D));
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
@@ -78,6 +79,7 @@ public class createAccPanel extends JPanel {
         // Fields: only username + password
         username = textField("Username");
         password = textField("Password");
+        email = textField("E-mail");
 
         RoundedButtonFactory startButton = button("Start the Vibe!");
 
@@ -87,11 +89,13 @@ public class createAccPanel extends JPanel {
         contentPanel.add(label1);
         contentPanel.add(Box.createVerticalStrut(4));
         contentPanel.add(label2);
-        contentPanel.add(Box.createVerticalStrut(8));
+        contentPanel.add(Box.createVerticalStrut(12));
+        contentPanel.add(email);
+        contentPanel.add(Box.createVerticalStrut(12));
         contentPanel.add(username);
-        contentPanel.add(Box.createVerticalStrut(20));
+        contentPanel.add(Box.createVerticalStrut(12));
         contentPanel.add(password);
-        contentPanel.add(Box.createVerticalStrut(40));
+        contentPanel.add(Box.createVerticalStrut(28));
         contentPanel.add(startButton);
 
         return contentPanel;

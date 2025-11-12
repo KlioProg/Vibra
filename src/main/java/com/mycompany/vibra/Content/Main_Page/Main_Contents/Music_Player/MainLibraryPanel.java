@@ -47,14 +47,11 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
     private final PlaylistDao playlistDao;
     private final PlaylistSongDao playlistSongDao;
     private final int currentUserID;
-
-    // Keep refs so we can update them on theme change
     private JPanel libraryPanel;
     private JLabel albumLabel;
     private JLabel yourLibraryLabel;
     FontFactory fontFactory = new DunbarFactory();
 
-    // --- MERGED CONSTRUCTOR ---
     public MainLibraryPanel(MusicPlayerPanel musicPlayerPanel, TrackListPanel trackListPanel, AlbumPanel albumPanel, int currentUserID) {
         this.musicPlayerPanel = musicPlayerPanel;
         this.trackListPanel = trackListPanel;
@@ -64,7 +61,6 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         this.playlistSongDao = new PlaylistSongDao();
         this.currentUserID = currentUserID;
 
-        // Initialize theme icons (from HEAD)
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
         this.buttonIcons = new CommonIconFactory();
 
@@ -74,22 +70,19 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         loadUserPlaylists();
 
         ThemeManager.getInstance().addThemeChangerListener(this);
-        applyTheme(); // Apply theme after initUI
+        applyTheme();
 
-        // Start hardcoded scan (from Final-Vibra)
         String hardcodedScanPath = "/Users/eeeuweee/Music/vibramusic"; // ‼️ CHANGE THIS PATH
         new ScanWorker(hardcodedScanPath).execute();
     }
 
-    // --- MERGED initUI (uses friend's 'createCreatePlaylistButton') ---
     private void initUI() {
-        // 1. This is the MAIN panel for this class
+
         libraryPanel = new JPanel();
-        libraryPanel.setLayout(new BorderLayout(0, 12)); // BorderLayout with 12px vertical gap
+        libraryPanel.setLayout(new BorderLayout(0, 4)); // BorderLayout with 12px vertical gap
         libraryPanel.setOpaque(false);
         libraryPanel.setBorder(BorderFactory.createEmptyBorder(32, 12, 0, 12));
 
-        // 2. Top Panel (Header)
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.setOpaque(false);
@@ -98,11 +91,9 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
 
         albumLabel = new JLabel("Album");
         albumLabel.setFont(fontFactory.createFont("dunbartall_bold", 36));
-        topPanel.add(albumLabel);
 
         libraryPanel.add(topPanel, BorderLayout.NORTH);
 
-        // 3. This is your new container
         playlistItemsContainer = new JPanel();
         playlistItemsContainer.setLayout(new BoxLayout(playlistItemsContainer, BoxLayout.Y_AXIS));
         playlistItemsContainer.setOpaque(false);
@@ -133,10 +124,6 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         add(libraryPanel, BorderLayout.CENTER);
     }
 
-    /**
-     * Helper method to add a single playlist panel to the container,
-     * correctly managing the "glue" component.
-     */
     private void addPlaylistToView(Playlist playlist) {
         JPanel newItem = createPlaylistItem(playlist);
 

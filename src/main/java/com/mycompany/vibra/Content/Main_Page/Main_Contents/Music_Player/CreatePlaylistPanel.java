@@ -7,9 +7,17 @@ import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.DarkMod
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.IconFactory;
 import com.mycompany.vibra.Factories.Common_UI.IconFactory_FactoryMethod.LightModeIconFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedButtonFactory;
-import com.mycompany.vibra.Factories.Common_UI.RoundedPanelFactory; // Import Panel factory
+import com.mycompany.vibra.Factories.Common_UI.RoundedPanelFactory;
 import com.mycompany.vibra.Factories.Common_UI.RoundedTextFieldFactory;
 import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
+
+// --- IMPORTS FOR CUSTOM POPUPS ---
+import com.mycompany.vibra.Content.PopUpChoices.PopUp_Alert;
+import com.mycompany.vibra.Content.PopUpChoices.PopUp_YesNo;
+import javax.swing.JDialog;
+import java.awt.Dialog;
+import java.awt.Frame;
+// --- END IMPORTS ---
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -30,62 +38,40 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
     private RoundedButtonFactory saveButton;
     private RoundedButtonFactory closeButton;
     private JLabel coverArtLabel;
-    private RoundedPanelFactory roundedCoverPanel; // For the cover art itself
+    private RoundedPanelFactory roundedCoverPanel;
 
     private ImageIcon playlistCover;
-    private boolean playlistCreated = false;
     private IconFactory icons;
     private IconFactory themeIcons;
     FontFactory fontFactory = new DunbarFactory();
 
+    // --- Logic Fields ---
+    private RoundedButtonFactory deleteButton;
+    private boolean playlistCreated = false;
+    private boolean playlistDeleted = false;
+    private boolean isEditMode = false;
+
     // --- Constructor 1: For "Create" ---
     public CreatePlaylistPanel() {
-        // Call the super constructor to make THIS panel rounded
-        super(
-                20, // cornerRadius
-                new Color(0x18, 0x18, 0x18), // backgroundColor
-                null, // borderColor
-                0,    // borderThickness
-                330,  // preferredWidth
-                460   // preferredHeight
-        );
-
-        // Initialize factories
+        super(20, new Color(0x18, 0x18, 0x18), null, 0, 330, 460); // Call super constructor
         this.fontFactory = new DunbarFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
         this.icons = new ButtonIconFactory();
-
-        // Set default cover for a new playlist
         this.playlistCover = icons.createIcon("playlist_default");
-
-        // Build the UI
+        this.isEditMode = false; // This is "Create" mode
         initUI();
     }
 
-    // --- ✅ Constructor 2: For "Edit" ---
+    // --- Constructor 2: For "Edit" ---
     public CreatePlaylistPanel(String initialName, String initialBio, ImageIcon initialCover) {
-        // Call the super constructor (same as above)
-        super(
-                20, // cornerRadius
-                new Color(0x18, 0x18, 0x18), // backgroundColor
-                null, // borderColor
-                0,    // borderThickness
-                330,  // preferredWidth
-                460   // preferredHeight
-        );
-
-        // Initialize factories
+        super(20, new Color(0x18, 0x18, 0x18), null, 0, 330, 460); // Call super constructor
         this.fontFactory = new DunbarFactory();
         this.themeIcons = ThemeManager.getInstance().isDarkMode() ? new DarkModeIconFactory() : new LightModeIconFactory();
         this.icons = new ButtonIconFactory();
-
-        // Set the EXISTING cover
         this.playlistCover = (initialCover != null) ? initialCover : icons.createIcon("playlist_default");
-
-        // Build the UI
+        this.isEditMode = true; // This is "Edit" mode
         initUI();
-
-        // ✅ Set the initial text for the fields
+        // Set existing text
         nameField.setText(initialName);
         bioField.setText(initialBio);
     }
@@ -93,17 +79,16 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
 
     /**
      * Initializes and lays out all UI components for the panel.
-     * This method is now called by BOTH constructors.
      */
     private void initUI() {
-
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20)); // Padding
 
+        // --- Close Button ---
         JPanel closePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         closePanel.setOpaque(false);
-        closeButton = new RoundedButtonFactory("X", 30); // 30-radius makes it a circle
-        closeButton.setPreferredSize(new Dimension(40, 40)); // Force square shape
+        closeButton = new RoundedButtonFactory("X", 30);
+        closeButton.setPreferredSize(new Dimension(40, 40));
         closeButton.setBackground(new Color(0x33, 0x33, 0x33));
         closeButton.setForeground(Color.WHITE);
         closeButton.addActionListener(e -> closeDialog());
@@ -113,46 +98,51 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
 
         add(Box.createVerticalStrut(4));
 
-        // ✅ This 'playlistCover' field is now set by the constructor
-        //    before initUI() is even called.
+        // --- Cover Art ---
         Image scaledImg = playlistCover.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
         coverArtLabel = new JLabel(new ImageIcon(scaledImg));
-
         roundedCoverPanel = new RoundedPanelFactory(15, Color.BLACK, null, 0, 150, 150);
         roundedCoverPanel.setLayout(new BorderLayout());
         roundedCoverPanel.add(coverArtLabel, BorderLayout.CENTER);
         roundedCoverPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         add(roundedCoverPanel);
 
-        // --- 4. "Change Cover" Button ---
+        // --- "Change Cover" Button ---
         add(Box.createVerticalStrut(15));
         RoundedButtonFactory changeCoverBtn = createChooseImageButton();
         changeCoverBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(changeCoverBtn);
 
-        // --- 5. Text Fields ---
+        // --- Text Fields ---
         add(Box.createVerticalStrut(16));
-
-        nameField = playlistNameTextField(); // Use your factory
+        nameField = playlistNameTextField();
         add(nameField);
-
         add(Box.createVerticalStrut(12));
-
-        bioField = bioPlaylistTextField(); // Use your factory
+        bioField = bioPlaylistTextField();
         add(bioField);
 
-        // --- 6. Save Button (Pushed to bottom) ---
-        add(Box.createVerticalGlue()); // This pushes the save button down!
+        // --- Button Panel (Pushed to bottom) ---
+        add(Box.createVerticalGlue());
         add(Box.createVerticalStrut(12));
 
-        saveButton = saveButton(); // Use your factory
-        saveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        add(saveButton);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+
+        // Add Save Button (always)
+        saveButton = saveButton();
+        buttonPanel.add(saveButton);
+
+        // Add Delete Button (only in edit mode)
+        if (isEditMode) {
+            deleteButton = createDeleteButton();
+            buttonPanel.add(deleteButton);
+        }
+        add(buttonPanel);
     }
 
     // --- Factory Methods for Components ---
-    // (No changes needed in these methods)
 
     private RoundedTextFieldFactory createStyledTextField(String placeholder){
         RoundedTextFieldFactory textField = new RoundedTextFieldFactory(40);
@@ -184,43 +174,72 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         button.setMaximumSize(saveButtonSize);
         button.setMinimumSize(saveButtonSize);
 
-        // Add the save logic
         button.addActionListener(e -> {
             if (nameField.getText() == null || nameField.getText().trim().isEmpty()) {
-                // ✅ Added a simple visual warning
                 nameField.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
-                JOptionPane.showMessageDialog(this, "Playlist name is required.", "Error", JOptionPane.ERROR_MESSAGE);
+                // --- FIXED: Use PopUp_Alert ---
+                PopUp_Alert.showAlert(this, "Error", "Playlist name is required.");
                 nameField.setBorder(null); // Reset border
                 return;
             }
             this.playlistCreated = true;
+            this.playlistDeleted = false; // Ensure delete flag is off
             closeDialog();
         });
 
         // Add the hover/press effects
         button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x7B2CBF));
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x9D4EDD));
-                button.setForeground(new Color(0xF9F6EE));
-            }
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x5A189A));
-                button.setForeground(new Color(0x9D4EDD));
-            }
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x7B2CBF));
-                button.setForeground(new Color(0xF9F6EE));
-            }
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x7B2CBF)); }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x9D4EDD)); button.setForeground(new Color(0xF9F6EE)); }
+            @Override public void mousePressed(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x5A189A)); button.setForeground(new Color(0x9D4EDD)); }
+            @Override public void mouseReleased(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x7B2CBF)); button.setForeground(new Color(0xF9F6EE)); }
         });
         return button;
     }
+
+    /**
+     * Creates a red "Delete" button with a confirmation dialog.
+     */
+    private RoundedButtonFactory createDeleteButton() {
+        RoundedButtonFactory button = new RoundedButtonFactory("Delete", 30);
+
+        // Red "Destructive" Style
+        Color baseColor = new Color(0xC0392b); // Red
+        Color hoverColor = new Color(0xE74C3C); // Brighter Red
+        Color pressColor = new Color(0x962D22); // Darker Red
+
+        button.setBackground(baseColor);
+        button.setForeground(Color.WHITE);
+
+        Dimension btnSize = new Dimension(100, 44); // A bit smaller than save
+        button.setPreferredSize(btnSize);
+        button.setMaximumSize(btnSize);
+        button.setMinimumSize(btnSize);
+
+        button.addActionListener(e -> {
+            // --- FIXED: Use custom confirmation ---
+            String title = "Confirm Deletion";
+            String message = "Are you sure you want to delete this playlist?";
+            boolean confirmed = showConfirmDialog(this, title, message); // Call helper
+
+            if (confirmed) {
+                this.playlistDeleted = true;  // Set the flag
+                this.playlistCreated = false; // Unset the other flag
+                closeDialog();                // Close the popup
+            }
+            // If not confirmed, do nothing.
+        });
+
+        // --- Hover/Press Effects ---
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) { button.setBackground(hoverColor); }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) { button.setBackground(baseColor); button.setForeground(Color.WHITE); }
+            @Override public void mousePressed(java.awt.event.MouseEvent e) { button.setBackground(pressColor); }
+            @Override public void mouseReleased(java.awt.event.MouseEvent e) { button.setBackground(hoverColor); button.setForeground(Color.WHITE); }
+        });
+        return button;
+    }
+
 
     private RoundedButtonFactory createChooseImageButton() {
         RoundedButtonFactory button = new RoundedButtonFactory("Change Cover", 30);
@@ -235,31 +254,15 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         button.addActionListener(e -> openImageChooser());
 
         button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x7B2CBF));
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x9D4EDD));
-                button.setForeground(new Color(0xF9F6EE));
-            }
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x5A189A));
-                button.setForeground(new Color(0x9D4EDD));
-            }
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                button.setBackground(new Color(0x7B2CBF));
-                button.setForeground(new Color(0xF9F6EE));
-            }
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x7B2CBF)); }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x9D4EDD)); button.setForeground(new Color(0xF9F6EE)); }
+            @Override public void mousePressed(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x5A189A)); button.setForeground(new Color(0x9D4EDD)); }
+            @Override public void mouseReleased(java.awt.event.MouseEvent e) { button.setBackground(new Color(0x7B2CBF)); button.setForeground(new Color(0xF9F6EE)); }
         });
         return button;
     }
 
     // --- Helper Methods ---
-    // (No changes here)
 
     private void openImageChooser() {
         JFileChooser fileChooser = new JFileChooser();
@@ -270,7 +273,6 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
             playlistCover = new ImageIcon(selectedFile.getAbsolutePath());
-
             // Update the label, scaled to 150x150
             Image scaledImg = playlistCover.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
             coverArtLabel.setIcon(new ImageIcon(scaledImg));
@@ -284,10 +286,32 @@ public class CreatePlaylistPanel extends RoundedPanelFactory {
         }
     }
 
+    /**
+     * Shows a custom modal "Yes/No" dialog using the PopUp_YesNo panel.
+     */
+    private boolean showConfirmDialog(Component parent, String title, String message) {
+        PopUp_YesNo confirmPanel = new PopUp_YesNo(title, message);
+        Window parentWindow = SwingUtilities.getWindowAncestor(parent);
+        JDialog dialog;
+        if (parentWindow instanceof Frame) {
+            dialog = new JDialog((Frame) parentWindow, true);
+        } else {
+            dialog = new JDialog((Dialog) parentWindow, true);
+        }
+        dialog.setUndecorated(true);
+        dialog.setBackground(new Color(0, 0, 0, 0));
+        dialog.setContentPane(confirmPanel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+        return confirmPanel.isConfirmed();
+    }
+
+
     // --- Public Getters ---
-    // (No changes here)
     public boolean isPlaylistCreated() { return this.playlistCreated; }
     public String getPlaylistName() { return nameField.getText(); }
     public String getPlaylistBio() { return bioField.getText(); }
     public ImageIcon getPlaylistCover() { return this.playlistCover; }
+    public boolean isPlaylistDeleted() { return this.playlistDeleted; } // The getter
 }
