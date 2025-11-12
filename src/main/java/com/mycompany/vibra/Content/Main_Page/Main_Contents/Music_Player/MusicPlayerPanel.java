@@ -58,7 +58,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     private volatile boolean isPlaying = false; // Use volatile
     public boolean isLiked = false; // boolean for likedpanel.
 
-    private Playlist currentPlaylist; //new added
+    public Playlist currentPlaylist; //new added
     private TrackIterator playlistIterator;
     FontFactory fontFactory = new DunbarFactory();
     
@@ -284,18 +284,23 @@ public class MusicPlayerPanel extends JPanel implements Observer{
                 isPlaying = true;
             }
         });
-         // listeners for iterator
+        // listeners for iterator
         prevButton.addActionListener(e -> {
-            if (playlistIterator.hasPrevious()) {
-                Track prevTrack = playlistIterator.previous();
-                currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(prevTrack));
+            if (currentTrack == null) return;
+            int currentIndex = currentPlaylist.getTracks().indexOf(currentTrack);
+            if (currentIndex > 0) {
+                // This will trigger the update() method, which calls loadTrack()
+                currentPlaylist.setCurrentTrackIndex(currentIndex - 1);
             }
         });
 
         nextButton.addActionListener(e -> {
-            if (playlistIterator.hasNext()) {
-                Track nextTrack = playlistIterator.next();
-                currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(nextTrack));
+            if (currentTrack == null) return;
+            int currentIndex = currentPlaylist.getTracks().indexOf(currentTrack);
+            // Check if it's not the last track
+            if (currentIndex != -1 && currentIndex < currentPlaylist.getTracks().size() - 1) {
+                // This will trigger the update() method, which calls loadTrack()
+                currentPlaylist.setCurrentTrackIndex(currentIndex + 1);
             }
         });
 
@@ -537,7 +542,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
         // Update like/play icons correctly
         likeButton.setIcon(isLiked ? likedIcon : heartIcon);
-        playPauseButton.setIcon(isPlaying ? playIcon : pauseIcon);
+        playPauseButton.setIcon(isPlaying ? pauseIcon : playIcon);
 
         revalidate();
         repaint();
@@ -554,6 +559,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     // REPLACE your loadTrack method with this:
     public void loadTrack(Track track) {
         this.currentTrack = track;
+
+        // Find the track in the main playlist and update the index
+        currentPlaylist.setCurrentTrackIndex(currentPlaylist.getTracks().indexOf(track));
+
         trackTitleLabel.setText(track.getTitle());
         trackArtistLabel.setText(track.getArtist());
 
@@ -598,9 +607,11 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
     @Override //for update method
     public void update() {
-        Track currentTrack = currentPlaylist.getCurrentTrack();
-        if (currentTrack != null) {
-            loadTrack(currentTrack);
+        Track newTrack = currentPlaylist.getCurrentTrack();
+        // Only load if the track is different from the one currently playing
+        // This prevents a recursive loop where loadTrack -> setCurrentTrackIndex -> update -> loadTrack
+        if (newTrack != null && !newTrack.equals(this.currentTrack)) {
+            loadTrack(newTrack);
         }
     }
     

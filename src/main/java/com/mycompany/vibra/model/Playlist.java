@@ -65,6 +65,11 @@ public class Playlist implements Subject {
         notifyObservers(); // Tell the UI to update
     }
 
+    public void setTracks(List<Track> tracks) {
+        this.tracks = new ArrayList<>(tracks); // Use a copy
+        // Optional: notify if the track list view needs to update
+    }
+
     // --- Your Existing Track & Player Logic (Unchanged) ---
 
     public void addTrack(Track track) {

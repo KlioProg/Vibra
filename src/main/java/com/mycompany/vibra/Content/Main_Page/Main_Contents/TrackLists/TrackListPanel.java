@@ -164,6 +164,10 @@ public class TrackListPanel extends JPanel implements ThemeManager.ThemeChangerL
         tracks.clear();
         tracks.addAll(newTracks); // Add the new tracks to the class list
 
+        if (musicPlayerPanel != null && musicPlayerPanel.currentPlaylist != null) {
+            musicPlayerPanel.currentPlaylist.setTracks(tracks);
+        }
+
         // Remove VerticalGlue (it's the last component)
         trackListContainer.remove(trackListContainer.getComponentCount() - 1);
 
