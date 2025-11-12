@@ -72,7 +72,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         ThemeManager.getInstance().addThemeChangerListener(this);
         applyTheme();
 
-        String hardcodedScanPath = "C:/Users/magno/Music/vibramusic-20251112T143301Z-1-001/vibramusic";// ‼️ CHANGE THIS PATH
+        String hardcodedScanPath = "/Users/eeeuweee/Music/vibramusic";// ‼️ CHANGE THIS PATH
         new ScanWorker(hardcodedScanPath).execute();
     }
 
@@ -164,6 +164,36 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 JOptionPane.ERROR_MESSAGE);
         }
     }
+
+        private void removePlaylistFromView(JPanel playlistPanel) {
+            Component toRemove = null;
+            Component strutToRemove = null;
+
+            // 1. Find the panel and the strut right after it
+            Component[] components = playlistItemsContainer.getComponents();
+            for (int i = 0; i < components.length; i++) {
+                if (components[i] == playlistPanel) {
+                    toRemove = components[i];
+                    // Check if the next component is a vertical strut (Box.Filler)
+                    if (i + 1 < components.length && components[i + 1] instanceof Box.Filler) {
+                        strutToRemove = components[i + 1];
+                    }
+                    break;
+                }
+            }
+
+            // 2. Remove them from the container
+            if (toRemove != null) {
+                playlistItemsContainer.remove(toRemove);
+            }
+            if (strutToRemove != null) {
+                playlistItemsContainer.remove(strutToRemove);
+            }
+
+            // 3. Refresh the UI
+            playlistItemsContainer.revalidate();
+            playlistItemsContainer.repaint();
+        }
 
     private JPanel createPlaylistItem(final Playlist playlist) {
         ThemeManager tm = ThemeManager.getInstance();
@@ -332,6 +362,21 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(dialog, "Error updating playlist in database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else if (createPanel.isPlaylistDeleted()) {
+                // USER CLICKED "DELETE" (and confirmed inside the panel)
+                try {
+                    boolean success = playlistDao.deletePlaylist(playlist.getPlaylistId());
+
+                    if (success) {
+                        // Use the helper we already built!
+                        removePlaylistFromView(itemPanel);
+                    } else {
+                        JOptionPane.showMessageDialog(itemPanel, "Could not delete playlist.", "Failed", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(itemPanel, "Error deleting playlist from database.", "Database Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });

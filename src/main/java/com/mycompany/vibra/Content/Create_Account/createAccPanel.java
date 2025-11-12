@@ -79,7 +79,7 @@ public class createAccPanel extends JPanel {
         // Fields: only username + password
         username = textField("Username");
         password = textField("Password");
-        email = textField("E-mail");
+        email = textField("E-mail");    
 
         RoundedButtonFactory startButton = button("Start the Vibe!");
 
@@ -145,10 +145,11 @@ public class createAccPanel extends JPanel {
 
                 String userText = username.getText().trim();
                 String passwordText = password.getText().trim();
+                String emailText = email.getText().trim();
 
                 try {
                     AuthService authService = new AuthService();
-                    User user = authService.signup(userText, passwordText);
+                    User user = authService.signup(userText, passwordText, emailText);
 
                     if (user != null) {
                         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(createAccPanel.this);
