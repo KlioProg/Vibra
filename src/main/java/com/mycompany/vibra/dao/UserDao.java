@@ -9,14 +9,17 @@ import java.sql.*;
 
 public class UserDao {
 
-    public User createUser(String username, String plainPassword) throws SQLException {
-        final String sql = "INSERT INTO users(username, password_hash) VALUES(?, ?)";
+    public User createUser(String username, String plainPassword, String email) throws SQLException { // <-- CHANGED
+        final String sql = "INSERT INTO users(username, password_hash, email) VALUES(?, ?, ?)";
         String hash = BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
 
         try (Connection c = Database.getConnection();
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
             ps.setString(1, username);
             ps.setString(2, hash);
+            ps.setString(3, email); 
+            
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
