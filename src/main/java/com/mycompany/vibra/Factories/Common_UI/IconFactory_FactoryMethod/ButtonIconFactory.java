@@ -10,8 +10,8 @@ public class ButtonIconFactory extends IconFactory {
             // Cannot be affected by the Theme Manager
             case "default_cover" -> createIcon("/images/default_cover.png", 28, 28);
             case "vibra" -> createIcon("/images/vibraSmall.png",120,90);
-            case "play" -> createIcon("/images/button_play.png", 80, 80);
-            case "pause" -> createIcon("/images/button_pause.png", 80, 80);
+            case "play" -> createIcon("/images/button_pause.png", 80, 80);
+            case "pause" -> createIcon("/images/button_play.png", 80, 80);
             case "back" -> createIcon("/images/backButton.png", 39, 25);
             case "skip" -> createIcon("/images/Skip.png", 39, 25);
             case "sound_down" -> createIcon("/images/soundDown.png", 16, 14);
