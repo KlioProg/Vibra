@@ -12,8 +12,8 @@ import com.mycompany.vibra.Factories.ThemeFactory.ThemeManager;
 import com.mycompany.vibra.musicUtilities.AudioPlayer;
 import com.mycompany.vibra.Factories.Music_UI.CustomSliderUI;
 import com.mycompany.vibra.model.Playlist; //playlist import
-import com.mycompany.vibra.model.Observer; //observer import 
-import com.mycompany.vibra.model.TrackIterator; //iterator import 
+import com.mycompany.vibra.model.Observer; //observer import
+import com.mycompany.vibra.model.TrackIterator; //iterator import
 import com.mycompany.vibra.Content.Main_Page.Main_Contents.Like_Panel.LikedPanel; // ADD THIS IMPORT
 
 import javax.swing.*;
@@ -61,7 +61,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     public Playlist currentPlaylist; //new added
     private TrackIterator playlistIterator;
     FontFactory fontFactory = new DunbarFactory();
-    
+
 
     // we only keep references, icons come from factory
     private ImageIcon playIcon, pauseIcon, heartIcon, likedIcon, defaultCover, themeButton;
@@ -69,8 +69,8 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
     public MusicPlayerPanel(AudioPlayer audioPlayer, Playlist playlist, LikedPanel likedPanel, int userId) {
         this.audioPlayer = audioPlayer;
-        this.likedPanel = likedPanel; // Store the reference  
-        this.currentUserID = userId;     
+        this.likedPanel = likedPanel; // Store the reference
+        this.currentUserID = userId;
         this.likedSongsDao = new LikedSongsDao();
         this.icons = new ButtonIconFactory();
 
@@ -82,7 +82,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         this.currentPlaylist = playlist;
         this.currentPlaylist.addObserver(this); // Register as an observer
         this.playlistIterator = currentPlaylist.createIterator();
-        // end for this new added 
+        // end for this new added
 
         setLayout(new BorderLayout(15, 15));
         setBorder(new EmptyBorder(30, 40, 30, 40));
@@ -97,10 +97,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         // Loads all liked songs into a list for fast checking
         try {
             this.likedTracksList = likedSongsDao.listLikedByUser(currentUserID);
-            
+
             // Also, tell the LikedPanel to update its UI
-            likedPanel.setSongs(this.likedTracksList); 
-            
+            likedPanel.setSongs(this.likedTracksList);
+
         } catch (SQLException e) {
             e.printStackTrace();
             // Failed to load liked songs
@@ -180,7 +180,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         buttonsPanel.setBorder(new EmptyBorder(10, 0, 20, 0));
 
         prevButton = new JButton(backIcon);
-        playPauseButton = new JButton(pauseIcon); // Start with play
+        playPauseButton = new JButton(playIcon);
         nextButton = new JButton(skipIcon);
 
         for (JButton btn : new JButton[]{prevButton, playPauseButton, nextButton}) {
@@ -265,25 +265,26 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         add(centerPanel, BorderLayout.CENTER);
         add(controlsPanel, BorderLayout.SOUTH);
 
-
-        // REPLACE the playPauseButton listener with this:
         playPauseButton.addActionListener(e -> {
             if (currentTrack == null) return;
 
-            if (isPlaying) {
-                // It's playing, so pause it
+            if (audioPlayer.isPlaying()) {
                 audioPlayer.pause();
                 progressTimer.stop();
-                playPauseButton.setIcon(playIcon);
                 isPlaying = false;
             } else {
-                // It's paused or stopped, so resume/play it
-                audioPlayer.resume(); // resume() will handle starting
+                if (audioPlayer.isPaused()) {
+                    audioPlayer.resume();
+                } else {
+                    audioPlayer.play(currentTrack);
+                }
                 progressTimer.start();
-                playPauseButton.setIcon(pauseIcon);
                 isPlaying = true;
             }
+
+            updatePlayPauseIcon();
         });
+
         // listeners for iterator
         prevButton.addActionListener(e -> {
             if (currentTrack == null) return;
@@ -323,15 +324,15 @@ public class MusicPlayerPanel extends JPanel implements Observer{
        likeButton.addActionListener(e -> {
             if (currentTrack == null || currentTrack.getId() == -1) {
                 // Not a valid, saved track
-                return; 
+                return;
             }
-    
+
             boolean currentlyLiked = isTrackInCache(currentTrack);
-            
+
             try {
                 if (currentlyLiked) {
                     // --- UNLIKE IT ---
-                    
+
                     // First, try to unlike in the DB
                     if (likedSongsDao.unlike(currentUserID, currentTrack.getId())) {
                         // --- Success! --- (The DAO will print the console log)
@@ -341,10 +342,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
                         likeButton.setIcon(heartIcon);
                         isLiked = false;
                     }
-                    
+
                 } else {
                     // --- LIKE IT ---
-                    
+
                     // First, try to like in the DB
                     if (likedSongsDao.like(currentUserID, currentTrack.getId())) {
                         // --- Success! --- (The DAO will print the console log)
@@ -377,16 +378,16 @@ public class MusicPlayerPanel extends JPanel implements Observer{
                 }
 
                 // --- THIS IS THE NEW "TAP-TO-SEEK" LOGIC ---
-                
+
                 // Get the UI component that handles the slider's appearance
                 javax.swing.plaf.SliderUI sliderUI = progressSlider.getUI();
-                
+
                 // Ask the UI to calculate the slider's value based on the mouse's X position
                 int value = ((BasicSliderUI) sliderUI).valueForXPosition(e.getX());
-                
+
                 // Manually set the slider's value to where the user clicked
                 progressSlider.setValue(value);
-                
+
                 // --- END OF NEW LOGIC ---
             }
 
@@ -408,16 +409,6 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             }
         });
     }
-    
-    // --- ADD THIS METHOD ---
-
-    /**
-
-     * Called by LikedPanel when a song is unliked from there.
-
-     * This forces the player's UI and cache to sync.
-
-     */
 
     public void syncLikeStatus(Track track, boolean isNowLiked) {
 
@@ -439,7 +430,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
         }
 
-        
+
 
         // If this is the track currently playing, update the icon
 
@@ -453,22 +444,11 @@ public class MusicPlayerPanel extends JPanel implements Observer{
 
     }
 
-
-    // --- ADD THIS METHOD ---
-
-    /**
-
-     * Called by LikedPanel when "Clear All" is pressed.
-
-     * Wipes the player's internal liked-song cache and updates the icon.
-
-     */
-
     public void clearLikedCache() {
 
         likedTracksList.clear();
 
-        
+
 
         // If a liked song is currently playing, update its icon
 
@@ -488,31 +468,26 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             if (currentTrack != null && (audioPlayer.isPlaying() || audioPlayer.isPaused())) {
                 long pos = audioPlayer.getCurrentPosition();
                 long dur = currentTrack.getDurationMs();
-                
+
                 if (dur > 0) {
                     int value = (int) ((pos / (double) dur) * 1000);
                     progressSlider.setValue(value);
                     currentTimeLabel.setText(formatMinutes((int) pos));
                 }
             }
-            
+
             // Check if song finished naturally
             if (currentTrack != null && !audioPlayer.isPlaying() && !audioPlayer.isPaused() && isPlaying) {
                 // It finished.
                 long pos = audioPlayer.getCurrentPosition();
                 long dur = currentTrack.getDurationMs();
-                
+
                 // Check if we are at the end (within 1.5 seconds)
-                if (pos >= dur - 1500) { 
-                    playPauseButton.setIcon(playIcon);
+                if (pos >= dur - 1500) {
                     isPlaying = false;
+                    updatePlayPauseIcon();
                     progressTimer.stop();
                     progressSlider.setValue(1000); // Set to end
-                    
-                    // --- Optional: Auto-play next song ---
-                    // if (playlistIterator.hasNext()) {
-                    //     nextButton.doClick();
-                    // }
                 }
             }
         });
@@ -540,9 +515,10 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             albumArtLabel.setIcon(defaultCover);
         }
 
-        // Update like/play icons correctly
         likeButton.setIcon(isLiked ? likedIcon : heartIcon);
-        playPauseButton.setIcon(isPlaying ? playIcon : pauseIcon);
+        updatePlayPauseIcon();
+
+
 
         revalidate();
         repaint();
@@ -551,7 +527,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
     // --- ADD THIS NEW HELPER METHOD ---
     private boolean isTrackInCache(Track track) {
         if (track == null || track.getId() == -1) return false;
-        
+
         // Check if any track in our list has the same ID
         return likedTracksList.stream().anyMatch(t -> t.getId() == track.getId());
     }
@@ -575,23 +551,23 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             albumArtLabel.setIcon(defaultCover);
         }
 
-        audioPlayer.stop(); 
+        audioPlayer.stop();
         progressTimer.stop();
 
         currentTimeLabel.setText("0:00");
         totalTimeLabel.setText(formatMinutes((int) track.getDurationMs()));
         progressSlider.setValue(0);
-        
+
         float value = volumeSlider.getValue() / 100f;
         audioPlayer.setVolume(value);
 
         audioPlayer.play(track);
         progressTimer.start();
-        playPauseButton.setIcon(pauseIcon);
         isPlaying = true;
+        updatePlayPauseIcon();
 
-        // --- NEW LIKED-STATUS CHECK ---
-        // Check our fast cache instead of the DB
+
+
         if (isTrackInCache(currentTrack)) {
             isLiked = true;
             likeButton.setIcon(likedIcon);
@@ -600,7 +576,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             likeButton.setIcon(heartIcon);
         }
         // --- END NEW CHECK ---
-        
+
         revalidate();
         repaint();
     }
@@ -614,8 +590,17 @@ public class MusicPlayerPanel extends JPanel implements Observer{
             loadTrack(newTrack);
         }
     }
-    
-}
-    
 
-    
+    private void updatePlayPauseIcon() {
+        if (isPlaying) {
+            playPauseButton.setIcon(pauseIcon);
+        } else {
+            playPauseButton.setIcon(playIcon);
+        }
+    }
+
+
+}
+
+
+
