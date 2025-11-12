@@ -87,41 +87,38 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         gridPanel.repaint();
     }
 
+    // Inside your AlbumPanel.java
     public AlbumPanel() {
         setLayout(new BorderLayout());
         setOpaque(false);
         setBorder(new EmptyBorder(30, 30, 30, 30));
         ThemeManager.getInstance().addThemeChangerListener(this);
 
-        // --- Top Header Section ---
+        // --- Top Header Section (Unchanged) ---
         JPanel topSection = new JPanel();
         topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
         topSection.setOpaque(false);
-
         header = new JLabel("Library");
         header.setFont(fontFactory.createFont("dunbartall_bold", 50));
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         topSection.add(header);
-
         topSection.add(Box.createVerticalStrut(5));
-
         subheader = new JLabel("Your Curated Selection:");
         subheader.setFont(fontFactory.createFont("dunbartall_bold", 20));
         subheader.setAlignmentX(Component.LEFT_ALIGNMENT);
         topSection.add(subheader);
-
         add(topSection, BorderLayout.NORTH);
 
         // --- Inner Dark Content Panel ---
         darkBackdrop = new RoundedBackdropFactory(new BorderLayout(), 20);
-        darkBackdrop.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // --- Album Grid ---
         gridPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         gridPanel.setOpaque(false);
+        gridPanel.setBorder(new EmptyBorder(20, 20, 20, 20)); // <-- ADD THIS
 
-        // Use a scroll pane for the grid
-        scrollPane = new JScrollPane(gridPanel); // ✅ ASSIGNED TO FIELD
+        // --- Scroll Pane (Unchanged) ---
+        scrollPane = new JScrollPane(gridPanel);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
@@ -132,26 +129,20 @@ public class AlbumPanel extends JPanel implements ThemeManager.ThemeChangerListe
         add(darkBackdrop, BorderLayout.CENTER);
 
         applyTheme(ThemeManager.getInstance().isDarkMode());
-        applyScrollBarTheme(); // ✅ APPLY ON INITIAL LOAD
+        applyScrollBarTheme();
     }
 
-    /**
-     * Applies the custom UI to the scrollbar based on the current theme.
-     */
     private void applyScrollBarTheme() {
         if (scrollPane == null) return;
 
         JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
         verticalScrollBar.setUI(new CustomScrollBarUI());
 
-        verticalScrollBar.revalidate();
-        verticalScrollBar.repaint();
-
-        // Match the corner color to the backdrop color
-        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new JPanel());
+        JPanel corner = new JPanel();
+        corner.setOpaque(false); // This is the key
+        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, corner); // Set the transparent panel
         scrollPane.getCorner(JScrollPane.UPPER_RIGHT_CORNER).setBackground(ThemeManager.getInstance().getContainerColor());
     }
-
     private void applyTheme(boolean isDark) {
         Color foreground = ThemeManager.getInstance().getForegroundColor();
         header.setForeground(foreground);
