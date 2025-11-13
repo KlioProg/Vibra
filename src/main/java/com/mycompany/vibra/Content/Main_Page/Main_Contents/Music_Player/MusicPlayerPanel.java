@@ -21,6 +21,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicSliderUI;
 import com.mycompany.vibra.dao.LikedSongsDao;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,6 +73,7 @@ public class MusicPlayerPanel extends JPanel implements Observer{
         this.likedPanel = likedPanel; // Store the reference  
         this.currentUserID = userId;     
         this.likedSongsDao = new LikedSongsDao();
+        this.likedTracksList = new ArrayList<>();
         this.icons = new ButtonIconFactory();
 
         loadLikedTracksCache();

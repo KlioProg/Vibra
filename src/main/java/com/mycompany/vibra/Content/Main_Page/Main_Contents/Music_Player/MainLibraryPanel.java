@@ -72,7 +72,7 @@ public class MainLibraryPanel extends JPanel implements ThemeManager.ThemeChange
         ThemeManager.getInstance().addThemeChangerListener(this);
         applyTheme();
         // ‼️ CHANGE THIS PATH
-        String hardcodedScanPath ="C:/Users/robbi/Music/vibramusic-20251112T143148Z-1-001/vibramusic";
+        String hardcodedScanPath ="/Users/eeeuweee/Music/vibramusic";
 
 
         new ScanWorker(hardcodedScanPath).execute();
